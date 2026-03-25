@@ -59,7 +59,7 @@ def card1():
 def card2():
 
 if changes needed in api's check Backend/src/services/curd.py
-def get_drafed_response():
+def get_draft_response():
 def get_allocated_email():
 
 login logic check Backend/src/routes/login.py

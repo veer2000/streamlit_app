@@ -35,11 +35,12 @@ SIT officer, deputy Superintendent of Police Kirankumar Suryavanshi, also gave i
         raise
 
 
-def get_drafed_response():
+def get_draft_response(emailContent):
     try:
-        return " This is a sample draft response. Please review, edit ad needed and submit"
+        return emailContent
+        # return " This is a sample draft response. Please review, edit ad needed and submit"
     except Exception as e:
-        print(f'Error in {func_name} . {get_drafed_response.__name__} : {e}')
+        print(f'Error in {func_name} . {get_draft_response.__name__} : {e}')
         raise
 
 def get_user_hash_password(db:Session, email:str):

@@ -4,7 +4,7 @@ st.set_page_config(page_title="Product Manager", page_icon="📦")
 
 
 if "logged_in" not in st.session_state:
-    st.session_state.logged_in = False
+    st.session_state.logged_in = True
 
 def login_page():
     # st.title("Login to System",text_alignment="center")
