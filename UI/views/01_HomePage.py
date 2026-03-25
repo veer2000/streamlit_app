@@ -80,7 +80,7 @@ def card2(emailContent):
                 if st.button("Save", use_container_width=True):
                     st.session_state.editing = False
                     # NOTE: we will store drafted version in database using version number
-                    st.success("Your Draft has been saved")
+                    # st.success("Your Draft has been saved",width="stretch")
                     document = Document()
                     new_parser = HtmlToDocx()
                     html_content = st.session_state.get("drafted_text") or ""
