@@ -52,3 +52,16 @@ UPDATED
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = True
 "  what this will do it will directly log you in without asking login details
+
+
+if changes needed in UI you need to check/find
+def card1():
+def card2():
+
+if changes needed in api's check Backend/src/services/curd.py
+def get_drafed_response():
+def get_allocated_email():
+
+login logic check Backend/src/routes/login.py
+@login_router.get("/login")
+async def loginUser(
