@@ -16,7 +16,14 @@ def get_user(db: Session, user_email: str ,user_id: int):
     # if user_exists #TODO: need to implement hash password
     return user_exists
 
+#NOTE: this method is for DB logic logic
 # def get_allocated_email(db, user_email, user_id):
+#     try:
+#         return None
+#     except Exception as e:
+#         print(f'Error in {func_name} . {get_user.__name__} : {e}')
+#         raise
+
 def get_allocated_email():
     try:
         return """
@@ -51,3 +58,10 @@ def get_user_hash_password(db:Session, email:str):
         return user_password.password
     except Exception as e:
         print(f'Error at {func_name} . {get_user_hash_password.__name__} : {e}')
+
+def submit_response(response):
+    try:
+        return response
+    except Exception as e:
+        print(f'Error in {func_name} . {submit_response.__name__} : {e}')
+        raise
