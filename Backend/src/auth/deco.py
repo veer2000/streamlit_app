@@ -1,9 +1,11 @@
 import functools
 import bcrypt
 import httpx
+from functools import wraps
+import inspect
 from fastapi import HTTPException
-# from Backend.src.services.database import SessionLocal
 from ..services.database import SessionLocal
+
 
 
 def with_access_token(func):
@@ -40,30 +42,29 @@ def get_db():
         db.close()
 
 
-def hash_pass(password):
-    try:
-        print(f'Enterted method {hash_pass.__name__}')
-        password_bytes = password.encode('utf-8')
-        hashed_password = bcrypt.hashpw(password_bytes, bcrypt.gensalt())
-        print(f'Hashed Password: {hashed_password}')
-        # return hashed_password.decode('utf-8')
-        return hashed_password
-    except Exception as e:
-        print(f"Error at {hash_pass.__name__}error: {str(e)}")
-        raise
+def hash_arg(arg_name):
+    def decorator(fun):
+        @wraps(fun)
+        def wrapper(*args, **kwargs):
+            # 1. Get the function signature (the names of all parameters)
+            sig = inspect.signature(fun)
+            bound_args = sig.bind(*args, **kwargs)
+            bound_args.apply_defaults()
 
+            # 2. Check if the targeted argument exists in the call
+            if arg_name in bound_args.arguments:
+                raw_password = bound_args.arguments[arg_name]
 
-def validate_password(password : bytes, hashed_password : bytes):
-    try:
-        print(f'Db Password : {password}')
-        print(f'Entered and coinverted  Password : {hashed_password}')
-        # NOTE: for now lets convert passowrd to bytes to match
-        if bcrypt.checkpw(password, hashed_password):
-            print("Password match!")
-            return True
-        else:
-            print("Incorrect password.")
-            return False
-    except Exception as e:
-        print(f"Error at {validate_password.__name__} error: {str(e)}")
-        raise
+                # 3. Perform Hashing
+                salt = bcrypt.gensalt()
+                hashed = bcrypt.hashpw(raw_password.encode('utf-8'), salt)
+
+                # 4. Overwrite the value with the hashed string
+                bound_args.arguments[arg_name] = hashed.decode('utf-8')
+                print(f"DEBUG: Successfully hashed '{arg_name}' for {fun.__name__}")
+
+            return fun(*bound_args.args, **bound_args.kwargs)
+
+        return wrapper
+
+    return decorator

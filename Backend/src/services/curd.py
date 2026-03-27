@@ -1,7 +1,9 @@
 from sqlalchemy.orm import Session
 
+from ..auth.deco import hash_arg
 from ..services import model, schema
 import inspect
+# from .utils import generate_hash_pass
 
 
 func_name = inspect.currentframe().f_code.co_name
@@ -11,20 +13,21 @@ def get_users(db: Session, skip:int=0, limit:int=100):
     return db.query(model.User).offset(skip).limit(limit).all()
 
 #NOTE: we will use it tot get user by id
-def get_user(db: Session, user_email: str ,user_id: int):
-    user_exists = db.query(model.User).filter(model.User.email == user_email).first()
+def get_user_by_id(db: Session, user_id: int):
+    user_exists = db.query(model.User).filter(model.User.id == user_id).first()
     # if user_exists #TODO: need to implement hash password
     return user_exists
 
 #NOTE: this method is for DB logic logic
-# def get_allocated_email(db, user_email, user_id):
-#     try:
-#         return None
-#     except Exception as e:
-#         print(f'Error in {func_name} . {get_user.__name__} : {e}')
-#         raise
+def get_allocated_email_original(db, user_email, user_password):
+    try:
+        user_identity =  db.query(model.User).filter(model.User.email == user_email).first()
+        return user_identity
+    except Exception as e:
+        print(f'Error in {func_name} . {get_allocated_email_original.__name__} : {e}')
+        raise
 
-def get_allocated_email():
+def get_allocated_email(db : Session, email : str, password):
     try:
         return """
         A man tried to attack Kharat outside the court but the police stopped him in time and took him into custody.
@@ -52,8 +55,11 @@ def get_draft_response(emailContent):
 
 def get_user_hash_password(db:Session, email:str):
     try:
+        # print(f'Email: {email}')
         print(f'Function is {get_user_hash_password.__name__}')
         user_password = db.query(model.User).filter(model.User.email == email).first()
+        if not user_password:
+            print(f'User with email {email} does not exist')
         print(f'User_password : {user_password.password}') # NOTE: remove this print after testing
         return user_password.password
     except Exception as e:
@@ -64,4 +70,22 @@ def submit_response(response):
         return response
     except Exception as e:
         print(f'Error in {func_name} . {submit_response.__name__} : {e}')
+        raise
+
+@hash_arg("new_password")
+def change_password(db:Session, user_email:str, new_password:str):
+    try:
+        update_user_password = db.query(model.User).filter(model.User.email == user_email).first()
+        if not update_user_password:
+            return {"status": False, "message": "User does not exist"}
+
+        # hashed_new_password = generate_hash_pass(new_password)
+        change_password.password = new_password
+        update_user_password.password = new_password
+        db.commit()
+        db.refresh(update_user_password)
+        return {"status": True, "message": "Password changed successfully"}
+    except Exception as e:
+        print(f'Error in {func_name} . {change_password.__name__} : {e}')
+        db.rollback()
         raise

@@ -10,5 +10,6 @@ class User(Base):
     id = Column(Integer,primary_key=True,index=True)
     name = Column(String(255),index=True)
     email = Column(String(255), unique=True, index=True)
+    password_original =Column(String(255))
     password = Column(String(255))
     createdate = Column(DateTime,default=datetime.now)
