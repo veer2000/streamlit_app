@@ -16,6 +16,10 @@ os.makedirs(folder_path, exist_ok=True)
 
 func_name = inspect.currentframe().f_code.co_name
 
+# st_quill("<p>INLINE TEST</p>", key="inline_test")
+
+def enable_edit():
+    st.session_state.editing = True
 
 st.title("Home Page",text_alignment="center")
 st.markdown("---")
@@ -45,81 +49,150 @@ emaildata = [
 def card1():
     try:
         return view_email(emaildata)
-        # st.subheader(" Email To Respond", text_alignment="center")
-        #
-        # # Using columns inside a card to show metrics
-        # with st.container(border=True):
-        #     #st.header("Email Details", text_alignment="center")
-        #     res = get_allocated_email()
-        #     st.write(res)
-        #     # col1, col2, col3 = st.columns(3, vertical_alignment="center",border=True)
-        #     # col1.metric("Total Items", "1,240", "+5%")
-        #     # col2.metric("Active Listings", "850", "-2%")
-        #     # col3.metric("Out of Stock", "12", "Low")
-        # return res
     except Exception as e:
         print(f'Error at {func_name}: {card1.__name__} : {e}')
         raise
 
+
+
 def card2(emailcontent):
     try:
-        st.subheader("Draft Response", anchor=False)
-        print(f'Entered method {card2.__name__}')
-        # 1. INITIALIZE DATA (Source of Truth)
-        if "drafted_text" not in st.session_state:
-            email_body_data = emailcontent[0]["body"]["content"]
-            # st.session_state.drafted_text = get_draft_response(email_body_data)
-            st.session_state.drafted_text = clean_html_for_quill(email_body_data)
+        st.subheader("Draft Response")
 
+        # ✅ Extract content
+        if isinstance(emailcontent, list) and len(emailcontent) > 0:
+            raw_html = emailcontent[0].get("body", {}).get("content", "")
+        else:
+            st.error("Invalid email content")
+            return
+
+        cleaned_html = clean_html_for_quill(raw_html)
+
+        # ✅ Initialize state
         if "editing" not in st.session_state:
             st.session_state.editing = False
 
-        with st.container(border=True):
-            if st.session_state.editing:
-                # 2. THE FIX: Pass 'drafted_text' but DO NOT overwrite it immediately.
-                # We store the editor's output in a temporary variable 'buffer_text'.
-                print(f'before quill {st.session_state.drafted_text}')
+        if "drafted_text" not in st.session_state:
+            st.session_state.drafted_text = cleaned_html
 
-                buffer_text = st_quill(
-                    value=st.session_state.drafted_text,  # Always load the source
-                    html=True,
-                    toolbar=["bold", "italic", "underline", {"color": []}, {"background": []}],
-                    key="quill_editor"
+        # =========================
+        # ✅ VIEW MODE
+        # =========================
+        if not st.session_state.editing:
+            with st.container(border=True):
+                st.markdown(
+                    st.session_state.drafted_text,
+                    unsafe_allow_html=True
                 )
 
-                # 3. ONLY update the source of truth when the user clicks SAVE
-                if st.button("Save Changes", type="primary", use_container_width=True):
-                    # Check if buffer_text is valid (not empty) before saving
-                    if buffer_text and buffer_text != "<p><br></p>":
-                        st.session_state.drafted_text = buffer_text
+        # =========================
+        # ✅ EDIT MODE (LIVE EDIT)
+        # =========================
+        else:
+            st.write("🟡 EDIT MODE")
 
-                    st.session_state.editing = False
-                    st.rerun()
+            try:
+                buffer_text = st_quill(
+                    value=st.session_state.drafted_text,
+                    html=True,
+                    toolbar=[
+                        ["bold", "italic", "underline"],
+                        [{"color": []}, {"background": []}]
+                    ],
+                    key="quill_editor"
+                )
+            except Exception:
+                buffer_text = st.text_area(
+                    "Edit Content",
+                    value=st.session_state.drafted_text,
+                    height=300
+                )
 
-                # Optional: Cancel button to discard changes
-                if st.button("Cancel", use_container_width=True):
-                    st.session_state.editing = False
-                    st.rerun()
+            # 🔥 KEY CHANGE: auto-sync
+            if buffer_text is not None:
+                st.session_state.drafted_text = buffer_text
 
-            else:
-                # Display state
-                display_html = st.session_state.drafted_text or "No content drafted yet."
-                st.markdown(display_html, unsafe_allow_html=True)
+        # =========================
+        # ✅ ACTION BUTTONS
+        # =========================
+        st.markdown("---")
 
-        # Bottom Buttons
         _, col1, col2, _ = st.columns([1, 1, 1, 1])
+
         with col1:
-            if not st.session_state.editing:
-                if st.button("Edit AI Response", use_container_width=True):
+            if st.session_state.editing:
+                if st.button("Save", use_container_width=True, key="save_btn"):
+                    st.session_state.editing = False
+                    st.rerun()
+            else:
+                if st.button("Edit AI Response", use_container_width=True, key="edit_btn"):
                     st.session_state.editing = True
                     st.rerun()
+
         with col2:
             if st.button("Submit Response", use_container_width=True):
                 submit_response(st.session_state.drafted_text)
                 st.toast("Email sent successfully!", icon="✅")
 
     except Exception as e:
-        st.error(f"Error in {func_name}: method: {card2.__name__} : {e}")
+        st.error(f"Error in card2: {e}")
+
+
+# def card2(emailcontent):
+#     try:
+#         st.subheader("Draft Response", anchor=False)
+#
+#         if "editing" not in st.session_state:
+#             st.session_state.editing = False
+#
+#         if "drafted_text" not in st.session_state:
+#             email_body_data = emailcontent[0]["body"]["content"]
+#             st.session_state.drafted_text = clean_html_for_quill(email_body_data)
+#
+#         st.write("DEBUG editing state:", st.session_state.get("editing"))
+#
+#         with st.container():
+#             if st.session_state.editing:
+#                 st.write("EDITOR MODE ACTIVE")
+#
+#                 buffer_text = st_quill(
+#                     value=st.session_state.drafted_text,
+#                     html=True,
+#                     toolbar=["bold", "italic", "underline", {"color": []}, {"background": []}],
+#                     key="quill_editor"
+#                 )
+#
+#                 if st.button("Save Changes", type="primary", use_container_width=True):
+#                     if buffer_text and buffer_text != "<p><br></p>":
+#                         st.session_state.drafted_text = buffer_text
+#
+#                     st.session_state.editing = False
+#                     st.rerun()
+#
+#                 if st.button("Cancel", use_container_width=True):
+#                     st.session_state.editing = False
+#                     st.rerun()
+#
+#             else:
+#                 st.markdown(st.session_state.drafted_text, unsafe_allow_html=True)
+#
+#         _, col1, col2, _ = st.columns([1, 1, 1, 1])
+#
+#         with col1:
+#             if not st.session_state.editing:
+#                 st.button(
+#                     "Edit AI Response",
+#                     use_container_width=True,
+#                     on_click=lambda: st.session_state.update({"editing": True})
+#                 )
+#
+#         with col2:
+#             if st.button("Submit Response", use_container_width=True):
+#                 submit_response(st.session_state.drafted_text)
+#                 st.toast("Email sent successfully!", icon="✅")
+#
+#     except Exception as e:
+#         st.error(f"Error in card2: {e}")
 # def card2(emailcontent):
 #     try:
 #         st.subheader("Draft Response", anchor=False, text_alignment='center')  # anchor=False removes the hover link icon

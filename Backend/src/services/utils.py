@@ -2,7 +2,6 @@ import inspect
 
 import bcrypt
 import streamlit as st
-import streamlit.components.v1 as components
 import re
 import inspect
 
@@ -16,12 +15,6 @@ def view_email(email_data):
         """Card 1: Displays the incoming email details."""
         st.markdown("""
                     <style>
-                    [data-testid="stVerticalBlockBorderWrapper"] {
-                        min-height: 200px;
-                        display: flex;
-                        flex-direction: column;
-                    }
-                    /* This styles the internal email body box */
                     .email-body-container {
                         min-height: 100px;
                         max-height: 600px; /* Optional: adds a scrollbar only if it gets REALLY long */
@@ -34,7 +27,6 @@ def view_email(email_data):
                     </style>
                 """, unsafe_allow_html=True)
         with st.container(border=True):
-            # Metadata Display
             col1, col2 = st.columns([2, 1])
             with col1:
                 st.markdown(f"**From:** `{email_data[0]['from']['emailAddress']['name']}`")
@@ -46,14 +38,10 @@ def view_email(email_data):
 
             st.markdown("**Body:**")
 
-            # 2. THE FIX: Use st.markdown instead of components.html
-            # We wrap the content in a <div> with a specific class for styling
             html_content = email_data[0]["body"]["content"]
 
-            # Optional: Clean the HTML using the function we built earlier
-            # to avoid Outlook styles breaking your app layout
             clean_content = clean_html_for_quill(html_content)
-
+            #
             st.markdown(
                 f'<div class="email-body-container">{clean_content}</div>',
                 unsafe_allow_html=True
@@ -91,12 +79,13 @@ def email_interface():
                 # Insert your sending logic here (e.g., smtplib)
 
         with col_icons:
+            st.write('hi 3')
             # Using markdown with emojis to simulate the toolbar icons in your image
-            st.markdown("""
-                <div style="display: flex; gap: 15px; font-size: 20px; padding-top: 5px; color: gray;">
-                    <span>🔡</span> <span>😊</span> <span>📎</span> <span>🖼️</span> <span>🔗</span> <span>⭐</span> <span>🗑️</span>
-                </div>
-            """, unsafe_allow_html=True)
+            # st.markdown("""
+            #     <div style="display: flex; gap: 15px; font-size: 20px; padding-top: 5px; color: gray;">
+            #         <span>🔡</span> <span>😊</span> <span>📎</span> <span>🖼️</span> <span>🔗</span> <span>⭐</span> <span>🗑️</span>
+            #     </div>
+            # """, unsafe_allow_html=True)
 
 
 def clean_html_for_quill(raw_html):

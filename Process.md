@@ -65,3 +65,8 @@ def get_allocated_email():
 login logic check Backend/src/routes/login.py
 @login_router.get("/login")
 async def loginUser(
+
+
+
+pip install extra-streamlit-components
+pip install streamlit-tinymce -> replacement is - pip install st-tiny-editor
