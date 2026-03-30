@@ -7,9 +7,6 @@ app = FastAPI(title="Streamlit UI API's FastAPI")
 
 app.include_router(login_router)
 
-# @app.get("/")
-# def read_root():
-#     return {"Hello": "World"}
 
 def print_hi(name):
     # Use a breakpoint in the code line below to debug your script.

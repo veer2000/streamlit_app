@@ -79,13 +79,11 @@ def email_interface():
                 # Insert your sending logic here (e.g., smtplib)
 
         with col_icons:
-            st.write('hi 3')
-            # Using markdown with emojis to simulate the toolbar icons in your image
-            # st.markdown("""
-            #     <div style="display: flex; gap: 15px; font-size: 20px; padding-top: 5px; color: gray;">
-            #         <span>🔡</span> <span>😊</span> <span>📎</span> <span>🖼️</span> <span>🔗</span> <span>⭐</span> <span>🗑️</span>
-            #     </div>
-            # """, unsafe_allow_html=True)
+            st.markdown("""
+                <div style="display: flex; gap: 15px; font-size: 20px; padding-top: 5px; color: gray;">
+                    <span>🔡</span> <span>😊</span> <span>📎</span> <span>🖼️</span> <span>🔗</span> <span>⭐</span> <span>🗑️</span>
+                </div>
+            """, unsafe_allow_html=True)
 
 
 def clean_html_for_quill(raw_html):
@@ -93,29 +91,21 @@ def clean_html_for_quill(raw_html):
         if not raw_html:
             return ""
 
-            # 1. Extract the content inside <body>
         body_match = re.search(r'<body[^>]*>(.*?)</body>', raw_html, re.IGNORECASE | re.DOTALL)
         content = body_match.group(1) if body_match else raw_html
 
-        # 2. Strip out all the <head>, <style>, <meta> stuff
         content = re.sub(r'<(html|head|meta|style|title)[^>]*>.*?</\1>', '', content, flags=re.IGNORECASE | re.DOTALL)
 
-        # 3. TRANSFORM DIVS TO SPANS (The "Quill Fix")
-        # This regex finds <div style="...">...</div> and captures the style and the inner text.
-        # It then converts it to <p><span style="...">...</span></p>
         def transform_div_to_span(match):
             style = match.group(1)
             text = match.group(2)
-            # We wrap it in <p> because Quill requires every line to be in a block-level tag
             return f'<p><span style="{style}">{text}</span></p>'
 
         content = re.sub(r'<div[^>]*style="([^"]*)"[^>]*>(.*?)</div>', transform_div_to_span, content,
                          flags=re.IGNORECASE | re.DOTALL)
 
-        # 4. Final Cleanup: Remove remaining structural tags but keep the content
         content = re.sub(r'</?(html|head|body|div)[^>]*>', '', content, flags=re.IGNORECASE)
 
-        # 5. Fix double-spacing that sometimes occurs during regex conversion
         content = content.replace('<p></p>', '').replace('<p><br></p>', '')
 
         return content.strip()
@@ -128,7 +118,6 @@ def clean_html_for_quill(raw_html):
 def change_password_dialog():
     st.write("Please verify your email and set a new password.")
 
-    # Input fields inside the modal
     email_input = st.text_input("Confirm Email", placeholder="Enter your email")
     new_pw = st.text_input("New Password", type="password", placeholder="Enter new password")
     confirm_pw = st.text_input("Confirm New Password", type="password")
@@ -157,19 +146,6 @@ def change_password_dialog():
         if st.button("Cancel", use_container_width=True):
             st.rerun()
 
-# def generate_hash_pass(password):
-#     try:
-#         print(f'Enterted method {generate_hash_pass.__name__}')
-#         password_bytes = password.encode('utf-8')
-#         hashed_password = bcrypt.hashpw(password_bytes, bcrypt.gensalt())
-#         print(f'Hashed Password: {hashed_password}')
-#         # return hashed_password.decode('utf-8')
-#         return hashed_password
-#     except Exception as e:
-#         print(f"Error at {generate_hash_pass.__name__}error: {str(e)}")
-#         raise
-
-
 def validate_password(password : bytes, hashed_password : bytes):
     try:
         print(f'Db Password : {password}')
@@ -184,29 +160,3 @@ def validate_password(password : bytes, hashed_password : bytes):
     except Exception as e:
         print(f"Error at {validate_password.__name__} error: {str(e)}")
         raise
-
-"""
-"value": [
-    {
-      "@odata.etag": "W/\"CQAAABYAAAAjLzc+n7YHS4d9ZMHcizm9AAKfvYHo\"",
-      "id": "AAMkAGRhN2M4ZjIyLTQ0ZmQtNGNiMi1hZDM4LTJmZGY3NjkwNmY3ZgBGAAAAAABadgoXVbP3R4yyxv4r5CRqBwAjLzc_n7YHS4d9ZMHcizm9AAAAAAEMAAAjLzc_n7YHS4d9ZMHcizm9AAEvpo1oAAA=",
-      "receivedDateTime": "2026-03-26T06:45:08Z",
-      "hasAttachments": true,
-      "subject": "Attached PDF",
-      "body": {
-        "contentType": "text",
-        "content": "Please check attached pdf\r\n\r\n\r\n"
-      },
-      "from": {
-        "emailAddress": {
-          "name": "Abhishek Gambhire",
-          "address": "AbhishekG@koolatron.com"
-        },
-        "to": {
-            "emailAddress": {
-            "name": "Sham",
-            "address": "Sham@Koolatron.com"
-        }
-    }
-  ]
-"""
