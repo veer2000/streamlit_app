@@ -31,6 +31,7 @@ def login_page_logic():
                             if username == "admin" and password == "admin1":
                                 st.session_state.logged_in = True
                                 st.session_state.user_email = "admin"
+                                st.session_state.role = 'admin'
                                 st.session_state.set_cookie_now = True
                                 st.rerun()
 
@@ -42,6 +43,8 @@ def login_page_logic():
                             if api_res and api_res.get("status"):
                                 st.session_state.logged_in = True
                                 st.session_state.user_email = username
+                                st.session_state.id = api_res["user_id"]
+                                st.session_state.role = 'user'
                                 st.session_state.set_cookie_now = True
                                 st.rerun()
                             else:

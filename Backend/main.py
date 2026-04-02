@@ -1,11 +1,12 @@
 from fastapi import FastAPI
 import os
 from src.routes.login import login_router as login_router
-
+from src.routes.admin import admin_routes as admin_routes
 
 app = FastAPI(title="Streamlit UI API's FastAPI")
 
 app.include_router(login_router)
+app.include_router(admin_routes)
 
 
 def print_hi(name):

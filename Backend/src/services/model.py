@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime, JSON
 from sqlalchemy.orm import relationship
 
 from ..services.database import Base
@@ -13,3 +13,9 @@ class User(Base):
     password_original =Column(String(255))
     password = Column(String(255))
     createdate = Column(DateTime,default=datetime.now)
+
+
+class PriorityDetailList(Base):
+    __tablename__ = "priority_detail_list"
+    id = Column(Integer,primary_key=True,index=True)
+    options =Column(JSON)

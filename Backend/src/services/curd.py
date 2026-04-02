@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 
+from .model import User
 from ..auth.deco import hash_arg
 from ..services import model, schema
 import inspect
@@ -88,4 +89,25 @@ def change_password(db:Session, user_email:str, new_password:str):
     except Exception as e:
         print(f'Error in {func_name} . {change_password.__name__} : {e}')
         db.rollback()
+        raise
+
+
+#----------------------------------------------------------------------------------------------------------------------
+# Fetch from DB
+def retrieve_drop_down_menu(db ):
+    try:
+        record = db.query(model.PriorityDetailList).filter(model.PriorityDetailList.id == 1).first()
+        print(f'type of result is {type(record)} result of get drop down {record} ')
+        return record.options
+    except Exception as e:
+        print(f'Error at {retrieve_drop_down_menu.__name__} : {e}')
+        raise
+
+def retrieve_drop_down_of_users(db):
+    try:
+        # NOTE: if you want user id fetched for database it is already retrieved just need to change how to send retriever right now we only send name
+        user_names = db.query(User.id, User.name).all()
+        return [user[1] for user in user_names]
+    except Exception as e:
+        print(f'Error in {retrieve_drop_down_of_users.__name__} : {e}')
         raise
