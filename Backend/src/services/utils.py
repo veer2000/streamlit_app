@@ -167,6 +167,7 @@ def on_user_change():
 
     if st.session_state.selected_user is None:
         st.session_state.selected_user = new_user
+        return
     elif st.session_state.form_change:
         st.session_state.show_warning = True
         st.session_state.pending_user = new_user
@@ -192,3 +193,31 @@ def validate_priorities():
         return False
 
     return True
+
+@st.dialog("Unsaved Changes")
+def show_unsaved_changes_modal():
+    if st.session_state.show_warning:
+            st.warning("You have unsaved changes!")
+
+            col1, col2 = st.columns(2)
+
+            with col1:
+                if st.button("Save"):
+                    st.session_state.form_change = False
+                    st.session_state.selected_user = st.session_state.pending_user
+                    # st.session_state.user = st.session_state.pending_user
+                    st.session_state.show_warning = False
+                    st.rerun()
+
+            with col2:
+                if st.button("Discard"):
+                    st.session_state.priority1 = "-"
+                    st.session_state.priority2 = "-"
+                    st.session_state.priority3 = "-"
+
+                    # Reset state
+                    st.session_state.form_change = False
+                    st.session_state.selected_user = st.session_state.pending_user
+                    st.session_state.show_warning = False
+
+                    st.rerun()
