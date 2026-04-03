@@ -10,9 +10,6 @@ db = SessionLocal()
 with SessionLocal() as db_session:
     priority_drop_down_list = retrieve_drop_down_menu(db)
     user_drop_down_dict = retrieve_drop_down_of_users(db)
-    # get_all_users = get_users(db)
-    # print(f'get all useres data 2222222222222222222222 {get_all_users}')
-    # print(f'user_drop_down_list value {user_drop_down_list}')
 
 
 # ADD THIS BLOCK
@@ -92,7 +89,6 @@ def admin_page_logic():
                             # "priority_4": st.session_state.priority4,
                         }
                         st.session_state.form_change = False
-                        print(f'5555555555555555555555555555555555 {st.session_state.user}')
                         if add_priority_data_to_user(db,selected_id,st.session_state.user, st.session_state.priority1, st.session_state.priority2, st.session_state.priority3):
                             # NOTE: we are printing value using tost
                             st.toast("Updated Successful", icon="✅")

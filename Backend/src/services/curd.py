@@ -57,7 +57,6 @@ def get_draft_response(emailContent):
 
 def get_user_hash_password(db:Session, email:str):
     try:
-        # print(f'Email: {email}')
         print(f'Function is {get_user_hash_password.__name__}')
         user_password = db.query(model.User).filter(model.User.email == email).first()
         if not user_password:
