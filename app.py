@@ -11,7 +11,7 @@ controller = cookie_manager.CookieManager()
 
 
 if "logged_in" not in st.session_state:
-    st.session_state.logged_in = True
+    st.session_state.logged_in = False
 # NOTE: need to work on session management
 # saved_user = controller.get(cookie="auth_user_token")
 # if saved_user and not st.session_state.logged_in:
@@ -57,7 +57,8 @@ def logout():
         st.session_state.clear()
         st.rerun()
 
-st.session_state.role = 'admin'
+#NOTE if you want to test or login only to login page uncomment it so that on any login you only go to admin page
+# st.session_state.role = 'admin'
 
 login_page = st.Page(login_page_model, title="Login", icon="🔒", default=(not st.session_state.logged_in))
 # admin_page = st.Page(admin_page_model, title="Admin") #, icon=""

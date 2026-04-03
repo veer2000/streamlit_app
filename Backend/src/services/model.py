@@ -18,6 +18,13 @@ class User(Base):
     password = Column(String(255))
     createdate = Column(DateTime,default=datetime.now)
 
+    def to_dict(self):
+        """Convert SQLAlchemy object to a clean dictionary."""
+        return {
+            column.name: getattr(self, column.name)
+            for column in self.__table__.columns
+        }
+
 
 class PriorityDetailList(Base):
     __tablename__ = "priority_detail_list"

@@ -1,6 +1,7 @@
 import streamlit as st
 
-from Backend.src.services.curd import retrieve_drop_down_menu, retrieve_drop_down_of_users
+from Backend.src.services.curd import retrieve_drop_down_menu, retrieve_drop_down_of_users, get_users, \
+    add_priority_data_to_user
 from Backend.src.services.database import SessionLocal
 from Backend.src.services.utils import on_user_change, mark_change, validate_priorities
 
@@ -8,8 +9,10 @@ db = SessionLocal()
 
 with SessionLocal() as db_session:
     priority_drop_down_list = retrieve_drop_down_menu(db)
-    user_drop_down_list = retrieve_drop_down_of_users(db)
-    print(f'user_drop_down_list value {user_drop_down_list}')
+    user_drop_down_dict = retrieve_drop_down_of_users(db)
+    # get_all_users = get_users(db)
+    # print(f'get all useres data 2222222222222222222222 {get_all_users}')
+    # print(f'user_drop_down_list value {user_drop_down_list}')
 
 
 # ADD THIS BLOCK
@@ -43,7 +46,7 @@ def admin_page_logic():
                         dropdown, _ = st.columns([1,0.1])
                         with dropdown:
                             # st.selectbox(options=("-","User 1", "User 2", "User 3"), label="User",label_visibility="collapsed", key="user")
-                            st.selectbox(options=user_drop_down_list, label="User",label_visibility="collapsed", key="user", on_change=on_user_change)
+                            st.selectbox(options=user_drop_down_dict.keys(), label="User",label_visibility="collapsed", key="user", on_change=on_user_change)
             with st.container(border=True, height=280, width=900):
                 with st.container(border=True, height=70, width=900, horizontal_alignment='center'): #border=True,
                     content_user, content_dropdown, _ = st.columns([0.5,0.5,0.1])
@@ -78,7 +81,10 @@ def admin_page_logic():
                     if st.button("Submit", use_container_width=True):
                         if not validate_priorities():
                             st.stop()
+                        selected_name = st.session_state.user
+                        selected_id = user_drop_down_dict.get(selected_name)
                         st.session_state.admin_form_data = {
+                            # "user_id": selected_id,
                             "user": st.session_state.user,
                             "priority_1": st.session_state.priority1,
                             "priority_2": st.session_state.priority2,
@@ -86,6 +92,8 @@ def admin_page_logic():
                             # "priority_4": st.session_state.priority4,
                         }
                         st.session_state.form_change = False
+                        print(f'5555555555555555555555555555555555 {st.session_state.user}')
+                        add_priority_data_to_user(db,selected_id,st.session_state.user, st.session_state.priority1, st.session_state.priority2, st.session_state.priority3)
                         # NOTE: we are printing value using tost
                         st.toast(st.session_state.admin_form_data)
 

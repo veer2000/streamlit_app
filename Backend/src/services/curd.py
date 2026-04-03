@@ -11,7 +11,8 @@ func_name = inspect.currentframe().f_code.co_name
 
 #NOTE: we will use it to get all users
 def get_users(db: Session, skip:int=0, limit:int=100):
-    return db.query(model.User).offset(skip).limit(limit).all()
+    all_users = db.query(model.User).offset(skip).limit(limit).all()
+    return [user.to_dict() for user in all_users]
 
 #NOTE: we will use it tot get user by id
 def get_user_by_id(db: Session, user_id: int):
@@ -107,8 +108,22 @@ def retrieve_drop_down_menu(db ):
 def retrieve_drop_down_of_users(_db):
     try:
         # NOTE: if you want user id fetched for database it is already retrieved just need to change how to send retriever right now we only send name
-        user_names = _db.query(User.id, User.name).all()
-        return [user[1] for user in user_names]
+        user_records = _db.query(User.id, User.name).filter(User.role != "admin").all()
+        return {user.name: user.id for user in user_records}
     except Exception as e:
         print(f'Error in {retrieve_drop_down_of_users.__name__} : {e}')
+        raise
+
+def add_priority_data_to_user(db,selected_id, user, priority1, priority2, priority3):
+    try:
+        user_to_update = db.query(model.User).filter(model.User.id == selected_id).first()
+        if user_to_update:
+            user_to_update.priority1 = priority1
+            user_to_update.priority2 = priority2
+            user_to_update.priority3 = priority3
+        db.commit()
+        print(f"Successfully updated priorities for User ID: {selected_id}")
+        return True
+    except Exception as e:
+        print(f'Error in {add_priority_data_to_user.__name__} : {e}')
         raise

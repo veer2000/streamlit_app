@@ -23,12 +23,13 @@ def login_page_logic():
 
                 with cent_co_left:
                     # Logic inside the button
+                    print(f'At login logic ')
                     if st.button("Login", icon_position="right", width=100):
                         if not username or not password:
                             st.warning("Please enter both fields.")
                         else:
                             # 1. Check Admin
-                            if username == "admin" and password == "admin1":
+                            if username == "admin@mail.com" and password == "admin1":
                                 st.session_state.logged_in = True
                                 st.session_state.user_email = "admin"
                                 st.session_state.role = 'admin'
