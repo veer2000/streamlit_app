@@ -93,9 +93,9 @@ def admin_page_logic():
                         }
                         st.session_state.form_change = False
                         print(f'5555555555555555555555555555555555 {st.session_state.user}')
-                        add_priority_data_to_user(db,selected_id,st.session_state.user, st.session_state.priority1, st.session_state.priority2, st.session_state.priority3)
-                        # NOTE: we are printing value using tost
-                        st.toast(st.session_state.admin_form_data)
+                        if add_priority_data_to_user(db,selected_id,st.session_state.user, st.session_state.priority1, st.session_state.priority2, st.session_state.priority3):
+                            # NOTE: we are printing value using tost
+                            st.toast("Updated Successful", icon="✅")
 
 
     if st.session_state.show_warning:

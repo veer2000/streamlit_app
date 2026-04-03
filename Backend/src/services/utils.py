@@ -188,7 +188,7 @@ def validate_priorities():
     values = [p1, p2, p3]
 
     if len(set(values)) != 3:
-        st.error("Priority values must be unique")
+        st.error("Priority values must not be same")
         return False
 
     return True
