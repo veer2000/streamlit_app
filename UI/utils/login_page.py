@@ -6,7 +6,7 @@ from Backend.src.services.utils import change_password_dialog
 
 db = SessionLocal()
 
-
+#TODO: on login attach databse call to validate user and if user name is admin or role is assigned admin then we move to admin page
 def login_page_logic():
     try:
         left_co, cent_co, last_co = st.columns(spec=[2.9, 3.9, 0.6], vertical_alignment="center")

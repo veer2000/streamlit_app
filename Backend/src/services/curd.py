@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-
+import streamlit as st
 from .model import User
 from ..auth.deco import hash_arg
 from ..services import model, schema
@@ -103,10 +103,11 @@ def retrieve_drop_down_menu(db ):
         print(f'Error at {retrieve_drop_down_menu.__name__} : {e}')
         raise
 
-def retrieve_drop_down_of_users(db):
+@st.cache_data
+def retrieve_drop_down_of_users(_db):
     try:
         # NOTE: if you want user id fetched for database it is already retrieved just need to change how to send retriever right now we only send name
-        user_names = db.query(User.id, User.name).all()
+        user_names = _db.query(User.id, User.name).all()
         return [user[1] for user in user_names]
     except Exception as e:
         print(f'Error in {retrieve_drop_down_of_users.__name__} : {e}')

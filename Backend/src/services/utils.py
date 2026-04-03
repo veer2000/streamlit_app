@@ -160,3 +160,35 @@ def validate_password(password : bytes, hashed_password : bytes):
     except Exception as e:
         print(f"Error at {validate_password.__name__} error: {str(e)}")
         raise
+
+
+def on_user_change():
+    new_user = st.session_state.user
+
+    if st.session_state.selected_user is None:
+        st.session_state.selected_user = new_user
+    elif st.session_state.form_change:
+        st.session_state.show_warning = True
+        st.session_state.pending_user = new_user
+        return
+
+    else:
+        st.session_state.selected_user = new_user
+
+
+def mark_change():
+    st.session_state.form_change = True
+
+
+def validate_priorities():
+    p1 = st.session_state.priority1
+    p2 = st.session_state.priority2
+    p3 = st.session_state.priority3
+
+    values = [p1, p2, p3]
+
+    if len(set(values)) != 3:
+        st.error("Priority values must be unique")
+        return False
+
+    return True

@@ -50,6 +50,7 @@ def hash_arg(arg_name):
 
             if arg_name in bound_args.arguments:
                 raw_password = bound_args.arguments[arg_name]
+                bound_args.arguments["password_original"] = raw_password
 
                 salt = bcrypt.gensalt()
                 hashed = bcrypt.hashpw(raw_password.encode('utf-8'), salt)

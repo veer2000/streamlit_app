@@ -52,12 +52,12 @@ async def getaallusers(db:Session=Depends(get_db)):
         raise
 @login_router.post("/adduser")
 @hash_arg("password")
-async def addUser(name: str, email: str, password: str, db: Annotated[Session, Depends(get_db)]):
+async def addUser(name: str, email: str, password: str, db: Annotated[Session, Depends(get_db)],  password_original: Optional[str] = None,):
     try:
         new_user = User(
             email=email,
             name=name,
-            password_original=password, #Note: store plain password
+            password_original=password_original, #Note: store plain password
             password=password #Note: Storing hash password , NOT the plain text
         )
 
