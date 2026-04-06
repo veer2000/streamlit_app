@@ -228,7 +228,7 @@ def show_unsaved_changes_modal(db,user_drop_down_dict):
                     )
                     if res:
                         st.session_state.submit_status = True
-                    st.toast('You changes are saved.')
+                        st.toast('You changes are saved.')
                     # reset_priorities()
 
                     st.session_state.form_change = False
@@ -248,3 +248,4 @@ def show_unsaved_changes_modal(db,user_drop_down_dict):
                     st.session_state.show_warning = False
                     st.toast('You changes are  discarded.')
                     st.rerun()
+    return None
