@@ -48,8 +48,6 @@ def card1():
         print(f'Error at {func_name}: {card1.__name__} : {e}')
         raise
 
-
-
 def card2(emailcontent):
     try:
         st.subheader("Draft Response")

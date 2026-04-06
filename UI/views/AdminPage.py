@@ -36,7 +36,7 @@ if "pending_user" not in st.session_state:
 
 if st.session_state.submit_status:
     reset_priorities()
-    st.toast('submited you response')
+    st.session_state.submit_status = False
 
 def admin_page_logic():
     with st.container():
@@ -140,7 +140,7 @@ def admin_page_logic():
                             if current_index < len(user_list) - 1:
                                 st.session_state.selected_user = user_list[current_index + 1]
                                 st.session_state.form_change = False
-                                # st.rerun()
+                                st.rerun()
                             else:
                                 st.success("You have reached the end of the list!")
 
