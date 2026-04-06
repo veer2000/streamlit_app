@@ -30,3 +30,10 @@ class PriorityDetailList(Base):
     __tablename__ = "priority_detail_list"
     id = Column(Integer,primary_key=True,index=True)
     options =Column(JSON)
+
+class UserPriorityDetail(Base):
+    __tablename__ = "user_priority_detail"
+    id = Column(Integer,primary_key=True,index=True)
+    priority_name = Column(String(255))
+    priority_detail = Column(String(255))
+    created_at =  Column(DateTime,default=datetime.now)

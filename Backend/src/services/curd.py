@@ -1,5 +1,7 @@
 from sqlalchemy.orm import Session
 import streamlit as st
+
+from .helper import tuple_of_list_to_list
 from .model import User
 from ..auth.deco import hash_arg
 from ..services import model, schema
@@ -102,6 +104,14 @@ def retrieve_drop_down_menu(db ):
         return record.options
     except Exception as e:
         print(f'Error at {retrieve_drop_down_menu.__name__} : {e}')
+        raise
+
+def retrieve_drop_down_menu_for_user(db):
+    try:
+        record = db.query(model.UserPriorityDetail.priority_name).all()
+        result = tuple_of_list_to_list(record)
+        return result
+    except Exception as e:
         raise
 
 @st.cache_data

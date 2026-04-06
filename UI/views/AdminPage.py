@@ -1,6 +1,6 @@
 import streamlit as st
 
-from Backend.src.services.curd import retrieve_drop_down_menu, retrieve_drop_down_of_users, get_users, \
+from Backend.src.services.curd import retrieve_drop_down_menu, retrieve_drop_down_of_users, retrieve_drop_down_menu_for_user, \
     add_priority_data_to_user
 from Backend.src.services.database import SessionLocal
 from Backend.src.services.utils import on_user_change, mark_change, validate_priorities, show_unsaved_changes_modal, \
@@ -10,9 +10,10 @@ db = SessionLocal()
 
 with SessionLocal() as db_session:
     priority_drop_down_list = retrieve_drop_down_menu(db)
+    user_priority_drop_down_list = retrieve_drop_down_menu_for_user(db)
     user_drop_down_dict = retrieve_drop_down_of_users(db)
-
-
+print(f'testing result of priority_drop_down_list : {priority_drop_down_list}')
+print(f'testing result of user_priority_drop_down_list: {user_priority_drop_down_list}')
 if "user" not in st.session_state and user_drop_down_dict:
     # Safely pick the first key from your database dictionary
     st.session_state.user = list(user_drop_down_dict.keys())[0]
@@ -86,8 +87,8 @@ def admin_page_logic():
                     with content_dropdown:
                         dropdown, _ = st.columns([1,0.1])
                         with dropdown:
-                            # st.selectbox(options=("-","Priority1 Value", "Home phone", "Mobile phone"), label="Priority1",label_visibility="collapsed",key="priority1")
-                            st.selectbox(options=priority_drop_down_list, label="Priority1",label_visibility="collapsed",key="priority1", on_change=mark_change)
+                            # st.selectbox(options=priority_drop_down_list, label="Priority1",label_visibility="collapsed",key="priority1", on_change=mark_change)
+                            st.selectbox(options=user_priority_drop_down_list, label="Priority1",label_visibility="collapsed",key="priority1", on_change=mark_change)
                 with st.container(border=True, height=70, width=900, horizontal_alignment='center'):
                     content_user, content_dropdown, _ = st.columns([0.5,0.5,0.1])
                     with content_user:
@@ -95,8 +96,8 @@ def admin_page_logic():
                     with content_dropdown:
                         dropdown, _ = st.columns([1,0.1])
                         with dropdown:
-                            # st.selectbox(options=("-", "Priority2", "Home phone", "Mobile phone"), label="Priority2",label_visibility="collapsed", key="priority2")
-                            st.selectbox(options=priority_drop_down_list, label="Priority2",label_visibility="collapsed", key="priority2", on_change=mark_change)
+                            # st.selectbox(options=priority_drop_down_list, label="Priority2",label_visibility="collapsed", key="priority2", on_change=mark_change)
+                            st.selectbox(options=user_priority_drop_down_list, label="Priority2",label_visibility="collapsed", key="priority2", on_change=mark_change)
                 with st.container(border=True, height=70, width=900, horizontal_alignment='center'):
                     content_user, content_dropdown, _ = st.columns([0.5,0.5,0.1])
                     with content_user:
@@ -104,8 +105,8 @@ def admin_page_logic():
                     with content_dropdown:
                         dropdown, _ = st.columns([1,0.1])
                         with dropdown:
-                            # st.selectbox(options=("-", "Priority3", "Home phone", "Mobile phone"), label="Priority3",label_visibility="collapsed", key="priority3")
-                            st.selectbox(options=priority_drop_down_list, label="Priority3",label_visibility="collapsed", key="priority3", on_change=mark_change)
+                            # st.selectbox(options=priority_drop_down_list, label="Priority3",label_visibility="collapsed", key="priority3", on_change=mark_change)
+                            st.selectbox(options=user_priority_drop_down_list, label="Priority3",label_visibility="collapsed", key="priority3", on_change=mark_change)
             with st.container(border=False, height=110, width=900):
                 _, button_box,_ = st.columns([1,1,1])
                 with button_box:
@@ -123,7 +124,6 @@ def admin_page_logic():
                             # "priority_4": st.session_state.priority4,
                         }
                         st.session_state.form_change = False
-                        print(f'5555555555555555555555555555555555 {st.session_state.user}')
                         if add_priority_data_to_user(
                                 db,
                                 selected_id,

@@ -195,7 +195,6 @@ def validate_priorities():
     return True
 
 
-
 def reset_priorities():
     st.session_state.priority1 = "-"
     st.session_state.priority2 = "-"
