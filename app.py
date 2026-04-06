@@ -62,7 +62,8 @@ def logout():
 
 login_page = st.Page(login_page_model, title="Login", icon="🔒", default=(not st.session_state.logged_in))
 # admin_page = st.Page(admin_page_model, title="Admin") #, icon=""
-home_page = st.Page("UI/views/01_HomePage.py", title="Home", icon="🏠", default=st.session_state.logged_in)
+# home_page = st.Page("UI/views/01_HomePage.py", title="Home", icon="🏠", default=st.session_state.logged_in)
+home_page = st.Page("UI/views/test_home_page.py", title="Home", icon="🏠", default=st.session_state.logged_in)
 admin_page = st.Page("UI/views/AdminPage.py", title="Data View", icon="📊")
 report_page = st.Page("UI/views/page_2.py", title="Reports", icon="📄")
 
