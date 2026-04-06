@@ -3,7 +3,8 @@ import streamlit as st
 from Backend.src.services.curd import retrieve_drop_down_menu, retrieve_drop_down_of_users, get_users, \
     add_priority_data_to_user
 from Backend.src.services.database import SessionLocal
-from Backend.src.services.utils import on_user_change, mark_change, validate_priorities, show_unsaved_changes_modal
+from Backend.src.services.utils import on_user_change, mark_change, validate_priorities, show_unsaved_changes_modal, \
+    reset_priorities
 
 db = SessionLocal()
 
@@ -15,6 +16,9 @@ with SessionLocal() as db_session:
 if "user" not in st.session_state and user_drop_down_dict:
     # Safely pick the first key from your database dictionary
     st.session_state.user = list(user_drop_down_dict.keys())[0]
+
+if "submit_status" not in st.session_state:
+    st.session_state.submit_status = False
 
 if "selected_user" not in st.session_state:
     st.session_state.selected_user = None
@@ -28,6 +32,10 @@ if "show_warning" not in st.session_state:
 if "pending_user" not in st.session_state:
     st.session_state.pending_user = None
 
+
+if st.session_state.submit_status:
+    reset_priorities()
+    st.toast('submited you response')
 
 def admin_page_logic():
     with st.container():
@@ -116,22 +124,32 @@ def admin_page_logic():
                         }
                         st.session_state.form_change = False
                         print(f'5555555555555555555555555555555555 {st.session_state.user}')
-                        if add_priority_data_to_user(db,selected_id,st.session_state.user, st.session_state.priority1, st.session_state.priority2, st.session_state.priority3):
-                            st.toast("Updated Successful", icon="✅")
-                            # NOTE: we are printing value using tost
-                            #NOTE: we are using exising data which we got by database call
+                        if add_priority_data_to_user(
+                                db,
+                                selected_id,
+                                selected_name,
+                                st.session_state.priority1,
+                                st.session_state.priority2,
+                                st.session_state.priority3
+                        ):
+                            st.session_state.submit_status = True
+
                             user_list = list(user_drop_down_dict.keys())
-                            current_index_of_users = user_list.index(selected_name) # NOTE here we are using selected_name which has value of current user selected
-                            if current_index_of_users < len(user_list) -1:
-                                st.session_state.selected_user = user_list[current_index_of_users+1] #Note we did here is if current_index_of_users is less than length of user_list we operate and switch to new user and rerun
+                            current_index = user_list.index(selected_name)
+
+                            if current_index < len(user_list) - 1:
+                                st.session_state.selected_user = user_list[current_index + 1]
+                                st.session_state.form_change = False
                                 st.rerun()
                             else:
                                 st.success("You have reached the end of the list!")
 
-                            st.toast("Updated Successful", icon="✅")
 
     if st.session_state.show_warning:
-        show_unsaved_changes_modal()
+        print(f'Selected user is {st.session_state.selected_user}')
+        show_unsaved_changes_modal(db,user_drop_down_dict)
 
     return None
+
+#Note: this ios function call for execution do not comment or remove it or change its indent
 admin_page_logic()

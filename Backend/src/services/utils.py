@@ -5,7 +5,7 @@ import streamlit as st
 import re
 import inspect
 
-from .curd import change_password
+from .curd import change_password, add_priority_data_to_user
 from .database import SessionLocal
 
 func_name = inspect.currentframe().f_code.co_name
@@ -194,8 +194,18 @@ def validate_priorities():
 
     return True
 
+
+
+def reset_priorities():
+    st.session_state.priority1 = "-"
+    st.session_state.priority2 = "-"
+    st.session_state.priority3 = "-"
+
+
+
+
 @st.dialog("Unsaved Changes")
-def show_unsaved_changes_modal():
+def show_unsaved_changes_modal(db,user_drop_down_dict):
     if st.session_state.show_warning:
             st.warning("You have unsaved changes!")
 
@@ -203,21 +213,38 @@ def show_unsaved_changes_modal():
 
             with col1:
                 if st.button("Save"):
+                    if not validate_priorities():
+                        st.stop()
+
+                    selected_name = st.session_state.selected_user
+                    selected_id = user_drop_down_dict.get(selected_name)
+                    res = add_priority_data_to_user(
+                        db,
+                        selected_id,
+                        selected_name,
+                        st.session_state.priority1,
+                        st.session_state.priority2,
+                        st.session_state.priority3
+                    )
+                    if res:
+                        st.session_state.submit_status = True
+                    st.toast('You changes are saved.')
+                    # reset_priorities()
+
                     st.session_state.form_change = False
                     st.session_state.selected_user = st.session_state.pending_user
-                    # st.session_state.user = st.session_state.pending_user
                     st.session_state.show_warning = False
                     st.rerun()
 
             with col2:
                 if st.button("Discard"):
-                    st.session_state.priority1 = "-"
-                    st.session_state.priority2 = "-"
-                    st.session_state.priority3 = "-"
-
+                    # st.session_state.priority1 = "-"
+                    # st.session_state.priority2 = "-"
+                    # st.session_state.priority3 = "-"
+                    reset_priorities()
                     # Reset state
                     st.session_state.form_change = False
                     st.session_state.selected_user = st.session_state.pending_user
                     st.session_state.show_warning = False
-
+                    st.toast('You changes are  discarded.')
                     st.rerun()
