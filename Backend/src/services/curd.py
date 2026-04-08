@@ -64,7 +64,7 @@ def get_user_hash_password(db:Session, email:str):
         user_password = db.query(model.User).filter(model.User.email == email).first()
         if not user_password:
             print(f'User with email {email} does not exist')
-        print(f'User_password : {user_password.password}') # NOTE: remove this print after testing
+        # print(f'User_password : {user_password.password}') # NOTE: remove this print after testing
         return user_password.password
     except Exception as e:
         print(f'Error at {func_name} . {get_user_hash_password.__name__} : {e}')
@@ -136,4 +136,41 @@ def add_priority_data_to_user(db,selected_id, user, priority1, priority2, priori
         return True
     except Exception as e:
         print(f'Error in {add_priority_data_to_user.__name__} : {e}')
+        raise
+
+
+def add_user_tracking_data(tracking_data, db):
+    try:
+        print(tracking_data)
+        if tracking_data:
+            for current_user in range(len(tracking_data)):
+                print(f'current_user {current_user} and username :{tracking_data[current_user]["user"]}')
+                existing_record = db.query(model.UserEmailTracking).filter(
+                    model.UserEmailTracking.msg_id == tracking_data[current_user]["msg_id"],
+                    model.UserEmailTracking.user == tracking_data[current_user]["user"]
+                ).first()
+                if existing_record:
+                    print("Updating existing record")
+                    existing_record.status = tracking_data[current_user]["status"]
+                    existing_record.start_time = tracking_data[current_user]["start_time"]
+                    existing_record.end_time = tracking_data[current_user]["end_time"]
+                    return True
+                else:
+                    print("Inserting new record")
+                    new_record = model.UserEmailTracking(
+                        msg_id=tracking_data[current_user]["msg_id"],
+                        user=tracking_data[current_user]["user"],
+                        sender_email=tracking_data[current_user]["sender_email"],
+                        subject=tracking_data[current_user]["subject"],
+                        email_timestamp=tracking_data[current_user]["email_timestamp"],
+                        status=tracking_data[current_user]["status"],
+                        start_time=tracking_data[current_user]["start_time"],
+                        end_time=tracking_data[current_user]["end_time"],
+                    )
+                    db.add(new_record)
+                    return True
+            db.commit()
+    except Exception as e:
+        db.rollback()
+        print(f'Error in {add_user_tracking_data.__name__} : {e}')
         raise

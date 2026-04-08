@@ -1,105 +1,98 @@
-from datetime import datetime, timedelta
-from streamlit_quill import st_quill
 import streamlit as st
 import extra_streamlit_components as cookie_manager
 from UI.utils.login_page import login_page_logic
 from UI.views.AdminPage import admin_page_logic
+from UI.views.HomePage import homepage
 
-st.set_page_config(page_title="Product Manager", page_icon="📦", layout="wide")
+st.set_page_config(page_title="Email Project", page_icon="📦", layout="wide")
 
 controller = cookie_manager.CookieManager()
 
+submit_button_flag = False
+
 
 if "logged_in" not in st.session_state:
-    st.session_state.logged_in = False
-# NOTE: need to work on session management
-# saved_user = controller.get(cookie="auth_user_token")
-# if saved_user and not st.session_state.logged_in:
-#     st.session_state.logged_in = True
-#     st.session_state.user_email = saved_user
+    st.session_state.logged_in = True
 
-if st.session_state.get("set_cookie_now"):
-    controller.set(
-        cookie="auth_user_token",
-        val=st.session_state.user_email,
-        expires_at=datetime.now() + timedelta(days=1)
-    )
-    # Clear the flag so it doesn't keep setting it
-    del st.session_state["set_cookie_now"]
-#
-if not st.session_state.get("logged_in", False):
-    st.markdown("""
-        <style>
-            [data-testid="stSidebar"], [data-testid="stSidebarCollapsedControl"] {
-                display: none;
-            }
-        </style>
-    """, unsafe_allow_html=True)
+if "page" not in st.session_state:
+    st.session_state.page = "login"
 
-def login_page_model():
+if "view_email_count" not in st.session_state:
+    st.session_state.view_email_count = 0
+
+
+def show_login():
     try:
         login_page_logic()
-    except Exception as e:
-        print(f'Error at function {login_page_model.__name__} error : {e}')
 
-def admin_page_model():
-    try:
-        admin_page_logic()
+        if st.session_state.get("logged_in"):
+            if st.session_state.get("role") == "admin":
+                st.session_state.page = "admin"
+            else:
+                st.session_state.page = "home"
+
+            st.rerun()
+
     except Exception as e:
-        print(f'Error at function {admin_page_model.__name__} error : {e}')
-        raise
+        print(f"Login error: {e}")
+
 
 def logout():
-    if st.sidebar.button("Log out"):
+    print("from app - logout function")
+
+    # ✅ Step 1: Try deleting cookie safely
+    try:
         controller.delete(cookie="auth_user_token")
-        st.session_state.logged_in = False
-        st.session_state.role = ''
-        st.session_state.clear()
+    except Exception as e:
+        print(f"Cookie delete skipped: {e}")
+
+    # ✅ Step 2: ALWAYS clear session
+    st.session_state.clear()
+
+    # ✅ Step 3: Reset required keys
+    st.session_state["logged_in"] = False
+    st.session_state["page"] = "login"
+
+    # ✅ Step 4: Force rerun
+    st.rerun()
+
+def show_navbar():
+    col1, col2, col3 = st.columns([1, 8, 1])
+    role = st.session_state.get("role")
+    if role == "admin":
+        with col1:
+            if st.button("🛠 Admin"):
+                st.session_state.page = "admin"
+
+    else:  # normal user
+        with col1:
+            if st.button("🏠 Home"):
+                st.session_state.page = "home"
+
+    # ✅ Logout always visible
+    with col3:
+        if st.button("🚪 Logout"):
+            logout()
+            st.stop()
+
+
+if not st.session_state.logged_in:
+    show_login()
+else:
+    # ✅ Ensure default page is set ONCE after login
+    if st.session_state.page == "login":
+        if st.session_state.get("role") == "admin":
+            st.session_state.page = "admin"
+        else:
+            st.session_state.page = "home"
+
         st.rerun()
 
-#NOTE if you want to test or login only to login page uncomment it so that on any login you only go to admin page
-# st.session_state.role = 'admin'
+    show_navbar()
 
-login_page = st.Page(login_page_model, title="Login", icon="🔒", default=(not st.session_state.logged_in))
-# admin_page = st.Page(admin_page_model, title="Admin") #, icon=""
-home_page = st.Page("UI/views/01_HomePage.py", title="Home", icon="🏠", default=st.session_state.logged_in)
-admin_page = st.Page("UI/views/AdminPage.py", title="Data View", icon="📊")
-report_page = st.Page("UI/views/page_2.py", title="Reports", icon="📄")
+    # ✅ Now page will always be correct
+    if st.session_state.page == "home":
+        homepage()
 
-#NOTE: Below part is for Navigation if you remove things from "Main" those will not be shown in UI and it is also has sidebar logic
-if st.session_state.logged_in:
-    st.markdown("""
-    <style>
-    .main .block-container {
-        display: flex;
-        justify-content: center;
-        height: 90vh;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
-    if st.session_state.get('role') == 'admin':
-        pages = {
-            "Admin Control": [admin_page]
-        }
-    else:
-        pages = {
-            "Main": [home_page, report_page]
-        }
-    pg = st.navigation(pages)
-    logout()
-        #{
-
-            # "Admin": [admin_page],
-            # "Main": [home_page,report_page],
-            # "Tools": [admin_page],
-            # "Account": []
-        #}
-
-
-else:
-    #NOTE: Before login: Navigation ONLY contains the login page This effectively removes the sidebar navigation entirely
-    pg = st.navigation([login_page], position="hidden")
-
-# NOTE: this is trigger point of application
-pg.run()
+    elif st.session_state.page == "admin":
+        admin_page_logic()

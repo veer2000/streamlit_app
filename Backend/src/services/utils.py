@@ -5,13 +5,24 @@ import streamlit as st
 import re
 import inspect
 
+from bs4 import BeautifulSoup
+
 from .curd import change_password, add_priority_data_to_user
 from .database import SessionLocal
 
 func_name = inspect.currentframe().f_code.co_name
 
+
+@st.dialog("Email Summary")
+def show_summary_dialog(summary_text):
+    st.write(summary_text)
+    # if st.button("Close"):
+    #     st.rerun()
+
+
 def view_email(email_data):
     try:
+        print(f'from view_email')
         """Card 1: Displays the incoming email details."""
         st.markdown("""
                     <style>
@@ -46,11 +57,20 @@ def view_email(email_data):
                 f'<div class="email-body-container">{clean_content}</div>',
                 unsafe_allow_html=True
             )
-
-            return email_data
+            soup = BeautifulSoup(clean_content, "html.parser")
+            plain_summary_text = soup.get_text(separator=" ", strip=True)
+            if st.button("Show Email Summary", type="tertiary"):
+                show_summary_dialog(plain_summary_text)
+        st.session_state.view_email_count += 1
+        print(f' and its count is {st.session_state.view_email_count}')
+        return email_data
     except Exception as e:
         print(f'Error at {view_email.__name__} : {e}')
         raise
+
+
+
+
 
 def email_interface():
     st.subheader("📧 Compose Email", divider="blue")
@@ -148,8 +168,6 @@ def change_password_dialog():
 
 def validate_password(password : bytes, hashed_password : bytes):
     try:
-        print(f'Db Password : {password}')
-        print(f'Entered and coinverted  Password : {hashed_password}')
         # NOTE: for now lets convert passowrd to bytes to match
         if bcrypt.checkpw(password, hashed_password):
             print("Password match!")
@@ -247,4 +265,9 @@ def show_unsaved_changes_modal(db,user_drop_down_dict):
                     st.session_state.show_warning = False
                     st.toast('You changes are  discarded.')
                     st.rerun()
+    return None
+
+def next_email_logic(submit_button_flag):
+    print(f'Lets validate submit_button_flag value : {submit_button_flag} ')
+    print("next Email Button has clicked and we are printing it ")
     return None

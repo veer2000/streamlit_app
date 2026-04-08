@@ -7,7 +7,7 @@ from Backend.src.services.utils import on_user_change, mark_change, validate_pri
     reset_priorities
 
 db = SessionLocal()
-
+print(f'From Admin Page')
 with SessionLocal() as db_session:
     priority_drop_down_list = retrieve_drop_down_menu(db)
     user_priority_drop_down_list = retrieve_drop_down_menu_for_user(db)
@@ -22,7 +22,7 @@ if "submit_status" not in st.session_state:
     st.session_state.submit_status = False
 
 if "selected_user" not in st.session_state:
-    st.session_state.selected_user = None
+    st.session_state.selected_user = ''
 
 if "form_change" not in st.session_state:
     st.session_state.form_change = False
@@ -143,6 +143,8 @@ def admin_page_logic():
                                 st.rerun()
                             else:
                                 st.success("You have reached the end of the list!")
+                    if st.session_state.submit_status:
+                        st.badge("Data Added", icon=":material/check:", color="green")
 
 
     if st.session_state.show_warning:
@@ -152,4 +154,4 @@ def admin_page_logic():
     return None
 
 #Note: this ios function call for execution do not comment or remove it or change its indent
-admin_page_logic()
+# admin_page_logic()

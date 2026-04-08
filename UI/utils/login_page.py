@@ -23,8 +23,9 @@ def login_page_logic():
 
                 with cent_co_left:
                     # Logic inside the button
-                    print(f'At login logic ')
+
                     if st.button("Login", icon_position="right", width=100):
+                        print(f'At login logic - Button Actually Pressed')
                         if not username or not password:
                             st.warning("Please enter both fields.")
                         else:

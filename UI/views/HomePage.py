@@ -4,7 +4,8 @@ import streamlit as st
 import inspect
 import os
 from streamlit_quill import st_quill
-from Backend.src.services.utils import view_email, clean_html_for_quill
+from ..utils.custom_variable import SubmitButtonFlag
+from Backend.src.services.utils import view_email, clean_html_for_quill,next_email_logic
 
 # folder_path = r"C:\Users\raghuveer\PyCharmMiscProject\streamlit_ui\UI"  #Note: Or "MyReports" for a relative path
 # file_name = "testfile.docx"
@@ -101,7 +102,6 @@ def card2(emailcontent):
                     height=300
                 )
 
-            # 🔥 KEY CHANGE: auto-sync
             if buffer_text is not None:
                 st.session_state.drafted_text = buffer_text
 
@@ -109,22 +109,41 @@ def card2(emailcontent):
         # ✅ ACTION BUTTONS
         # =========================
         st.markdown("---")
+        if SubmitButtonFlag.show_submit_button_flag:
+            col1, col2, clo3 = st.columns([1, 1, 1])
 
-        _, col1, col2, _ = st.columns([1, 1, 1, 1])
+            with col1:
+                is_editing = st.session_state.get("editing", False)
+                st.button(
+                    "Edit AI Response",
+                    use_container_width=True,
+                    disabled=is_editing,
+                    on_click=lambda: st.session_state.update({"editing": True})
+                )
 
-        with col1:
-            is_editing = st.session_state.get("editing", False)
-            st.button(
-                "Edit AI Response",
-                use_container_width=True,
-                disabled=is_editing,
-                on_click=lambda: st.session_state.update({"editing": True})
-            )
+            with col2:
+                st.button("Submit Response", use_container_width=True,
+                          on_click=lambda: st.session_state.update({"editing": False}))
 
-        with col2:
-            st.button("Submit Response", use_container_width=True,
-              on_click=lambda: st.session_state.update({"editing": False}))
+            with clo3:
+                st.button("Next Email", use_container_width=True,
+                          on_click=next_email_logic(SubmitButtonFlag.show_submit_button_flag))
 
+        else:
+            _, col1, col2, _ = st.columns([1, 1, 1, 1])
+
+            with col1:
+                is_editing = st.session_state.get("editing", False)
+                st.button(
+                    "Edit AI Response",
+                    use_container_width=True,
+                    disabled=is_editing,
+                    on_click=lambda: st.session_state.update({"editing": True})
+                )
+
+            with col2:
+                st.button("Next Email", use_container_width=True,
+                          on_click=next_email_logic(SubmitButtonFlag.show_submit_button_flag))
 
     except Exception as e:
         st.error(f"Error in card2: {e}")
@@ -132,9 +151,10 @@ def card2(emailcontent):
 
 def homepage():
     try:
+        # card1()
         card1_res = card1()
         card2(card1_res)
     except Exception as e:
         raise
 
-homepage()
+# homepage()

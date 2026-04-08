@@ -37,3 +37,16 @@ class UserPriorityDetail(Base):
     priority_name = Column(String(255))
     priority_detail = Column(String(255))
     created_at =  Column(DateTime,default=datetime.now)
+
+class UserEmailTracking(Base):
+    __tablename__ = "user_email_tracking"
+    id = Column(Integer,primary_key=True,index=True)
+    msg_id = Column(String(255))
+    user = Column(String(255))
+    sender_email = Column(String(255))
+    subject = Column(String(255))
+    email_timestamp = Column(String(255))
+    status = Column(String(255))
+    start_time = Column(String(255))
+    end_time = Column(String(255))
+    created_time =  Column(DateTime,default=datetime.now)
