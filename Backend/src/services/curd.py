@@ -139,25 +139,25 @@ def add_priority_data_to_user(db,selected_id, user, priority1, priority2, priori
         raise
 
 
-def add_user_tracking_data(tracking_data, db):
+def add_data_to_email_status_detail(tracking_data, db):
     try:
         print(tracking_data)
         if tracking_data:
             for current_user in range(len(tracking_data)):
                 print(f'current_user {current_user} and username :{tracking_data[current_user]["user"]}')
-                existing_record = db.query(model.UserEmailTracking).filter(
-                    model.UserEmailTracking.msg_id == tracking_data[current_user]["msg_id"],
-                    model.UserEmailTracking.user == tracking_data[current_user]["user"]
+                existing_record = db.query(model.EmailStatusDetails).filter(
+                    model.EmailStatusDetails.msg_id == tracking_data[current_user]["msg_id"],
+                    model.EmailStatusDetails.user == tracking_data[current_user]["user"]
                 ).first()
+                print(f'database : {model.EmailStatusDetails.user} and to insert : {tracking_data[current_user]["user"]}')
                 if existing_record:
                     print("Updating existing record")
                     existing_record.status = tracking_data[current_user]["status"]
                     existing_record.start_time = tracking_data[current_user]["start_time"]
                     existing_record.end_time = tracking_data[current_user]["end_time"]
-                    return True
                 else:
                     print("Inserting new record")
-                    new_record = model.UserEmailTracking(
+                    new_record = model.EmailStatusDetails(
                         msg_id=tracking_data[current_user]["msg_id"],
                         user=tracking_data[current_user]["user"],
                         sender_email=tracking_data[current_user]["sender_email"],
@@ -168,9 +168,10 @@ def add_user_tracking_data(tracking_data, db):
                         end_time=tracking_data[current_user]["end_time"],
                     )
                     db.add(new_record)
-                    return True
-            db.commit()
+        db.commit()
+        return True
     except Exception as e:
         db.rollback()
-        print(f'Error in {add_user_tracking_data.__name__} : {e}')
+        print(f'Error in {add_data_to_email_status_detail.__name__} : {e}')
         raise
+
