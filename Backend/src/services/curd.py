@@ -1,3 +1,5 @@
+import datetime
+
 from sqlalchemy.orm import Session
 import streamlit as st
 
@@ -175,3 +177,37 @@ def add_data_to_email_status_detail(tracking_data, db):
         print(f'Error in {add_data_to_email_status_detail.__name__} : {e}')
         raise
 
+def login_user_log_entry(user_email, db:Session):
+    try:
+        print('entered login_user_log_entry')
+        loginlog = db.query(model.UserActivityLog).filter(model.UserActivityLog.user == user_email).first()
+        if loginlog:
+            print('entered if for login_user_log_entry')
+            loginlog.log_in_time = datetime.datetime.now()
+        else:
+            new_log = model.UserActivityLog(
+                user=user_email,
+                log_in_time=datetime.datetime.now(),
+                type = "user"
+            )
+            db.add(new_log)
+            db.commit()
+            db.refresh(new_log)
+
+    except Exception as e:
+        print(f'Error in {login_user_log_entry.__name__} : {e}')
+        raise
+
+
+def logout_user_log_entry(db:Session, user_email):
+    try:
+        logoutuser = db.query(model.UserActivityLog).filter(model.UserActivityLog.user == user_email).first()
+        if logoutuser:
+            logoutuser.log_out_time = datetime.datetime.now()
+            logoutuser.type = 'user'
+        db.commit()
+        print(f'Successfully added logout time to Database')
+        return True
+    except Exception as e:
+        print(f'Error in {logout_user_log_entry.__name__} : {e}')
+        raise

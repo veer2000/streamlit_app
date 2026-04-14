@@ -128,7 +128,6 @@ def card2(emailcontent):
             with clo3:
                 st.button("Next Email", use_container_width=True,
                           on_click=next_email_logic(SubmitButtonFlag.show_submit_button_flag))
-
         else:
             _, col1, col2, _ = st.columns([1, 1, 1, 1])
 

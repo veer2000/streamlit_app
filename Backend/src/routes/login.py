@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from ..services.utils import  validate_password
 from ..services.curd import get_user_hash_password, get_users, get_allocated_email_original, \
-    get_user_by_id, change_password, add_data_to_email_status_detail
+    get_user_by_id, change_password, add_data_to_email_status_detail, login_user_log_entry
 
 # NOTE: we will keep model seperate
 from ..services.model import User
@@ -23,6 +23,8 @@ def loginUser(email:str, password: str, db:Session=Depends(get_db)): # request :
         #NOTE: to validate_password params should be plantext as type = bytes and hashed as type = bytes for comparison
         if validate_password(password.encode('utf-8'), hashed_pass.encode('utf-8')):
             user_is = get_allocated_email_original(db, email, hashed_pass)
+            print(f'email is email {email}')
+            login_user_log_entry(email, db)
             return {"user_id":user_is.id,
                     "status": True}
         else:

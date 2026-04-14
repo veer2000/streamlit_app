@@ -1,5 +1,7 @@
 import streamlit as st
 import extra_streamlit_components as cookie_manager
+from Backend.src.services.curd import logout_user_log_entry
+from Backend.src.services.database import SessionLocal
 from UI.utils.login_page import login_page_logic
 from UI.views.AdminPage import admin_page_logic
 from UI.views.HomePage import homepage
@@ -8,17 +10,16 @@ st.set_page_config(page_title="Email Project", page_icon="📦", layout="wide")
 
 controller = cookie_manager.CookieManager()
 
-submit_button_flag = False
-
 
 if "logged_in" not in st.session_state:
-    st.session_state.logged_in = True
+    st.session_state.logged_in = False
 
 if "page" not in st.session_state:
     st.session_state.page = "login"
 
 if "view_email_count" not in st.session_state:
     st.session_state.view_email_count = 0
+
 
 
 def show_login():
@@ -39,21 +40,19 @@ def show_login():
 
 def logout():
     print("from app - logout function")
+    with SessionLocal() as db_session:
+        logout_user_log_entry(db_session, st.session_state.user_email)
 
-    # ✅ Step 1: Try deleting cookie safely
     try:
         controller.delete(cookie="auth_user_token")
     except Exception as e:
         print(f"Cookie delete skipped: {e}")
 
-    # ✅ Step 2: ALWAYS clear session
     st.session_state.clear()
 
-    # ✅ Step 3: Reset required keys
     st.session_state["logged_in"] = False
     st.session_state["page"] = "login"
 
-    # ✅ Step 4: Force rerun
     st.rerun()
 
 def show_navbar():

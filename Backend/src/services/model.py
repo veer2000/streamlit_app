@@ -7,6 +7,7 @@ from ..services.database import Base
 
 class User(Base):
     __tablename__ = "users"
+    __table_args__ = {'extend_existing': True}
     id = Column(Integer,primary_key=True,index=True)
     name = Column(String(255),index=True)
     email = Column(String(255), unique=True, index=True)
@@ -28,11 +29,13 @@ class User(Base):
 
 class PriorityDetailList(Base):
     __tablename__ = "priority_detail_list"
+    __table_args__ = {'extend_existing': True}
     id = Column(Integer,primary_key=True,index=True)
     options =Column(JSON)
 
 class UserPriorityDetail(Base):
     __tablename__ = "user_priority_detail"
+    __table_args__ = {'extend_existing': True}
     id = Column(Integer,primary_key=True,index=True)
     priority_name = Column(String(255))
     priority_detail = Column(String(255))
@@ -40,6 +43,7 @@ class UserPriorityDetail(Base):
 
 class EmailStatusDetails(Base):
     __tablename__ = "email_status_details"
+    __table_args__ = {'extend_existing': True}
     id = Column(Integer,primary_key=True,index=True)
     msg_id = Column(String(255))
     user = Column(String(255))
@@ -50,3 +54,14 @@ class EmailStatusDetails(Base):
     start_time = Column(String(255))
     end_time = Column(String(255))
     created_time =  Column(DateTime,default=datetime.now)
+
+
+
+class UserActivityLog(Base):
+    __tablename__ = "user_log_activity"
+    __table_args__ = {'extend_existing': True}
+    id = Column(Integer,primary_key=True,index=True)
+    user = Column(String(255),index=True)
+    log_in_time = Column(String(255),index=True)
+    log_out_time = Column(String(255),index=True)
+    type = Column(String(255))
