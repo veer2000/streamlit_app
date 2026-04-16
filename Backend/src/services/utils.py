@@ -1,3 +1,4 @@
+import datetime
 import inspect
 
 import bcrypt
@@ -6,8 +7,9 @@ import re
 import inspect
 
 from bs4 import BeautifulSoup
+from streamlit.runtime.scriptrunner_utils.script_run_context import get_script_run_ctx
 
-from .curd import change_password, add_priority_data_to_user
+from .curd import change_password, add_priority_data_to_user, find_user_log
 from .database import SessionLocal
 
 func_name = inspect.currentframe().f_code.co_name
@@ -20,9 +22,16 @@ def show_summary_dialog(summary_text):
     #     st.rerun()
 
 
+
+
+def get_session_id():
+    ctx = get_script_run_ctx()
+    return ctx.session_id if ctx else None
+
+
 def view_email(email_data):
     try:
-        print(f'from view_email')
+        # print(f'from view_email')
         """Card 1: Displays the incoming email details."""
         st.markdown("""
                     <style>
@@ -62,7 +71,7 @@ def view_email(email_data):
             if st.button("Show Email Summary", type="tertiary"):
                 show_summary_dialog(plain_summary_text)
         st.session_state.view_email_count += 1
-        print(f' and its count is {st.session_state.view_email_count}')
+        # print(f' and its count is {st.session_state.view_email_count}')
         return email_data
     except Exception as e:
         print(f'Error at {view_email.__name__} : {e}')
@@ -268,6 +277,46 @@ def show_unsaved_changes_modal(db,user_drop_down_dict):
     return None
 
 def next_email_logic(submit_button_flag):
-    print(f'Lets validate submit_button_flag value : {submit_button_flag} ')
-    print("next Email Button has clicked and we are printing it ")
+    # print(f'Lets validate submit_button_flag value : {submit_button_flag} ')
+    # print("next Email Button has clicked and we are printing it ")
     return None
+
+
+def force_login(email, passed_session_id, db):
+    user_log = find_user_log(db, email)
+
+    user_log.session_id = passed_session_id
+    user_log.is_logged_in = True
+    user_log.log_in_time = datetime.datetime.now()
+
+    db.commit()
+
+@st.dialog("⚠️ Active Session Found")
+def takeover_dialog():
+
+    st.warning("You are already logged in in another tab.")
+
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("Take Over"):
+
+            with SessionLocal() as db:
+                # call your backend force login
+                force_login(
+                    email=st.session_state.pending_login["email"],
+                    passed_session_id=st.session_state.session_id,
+                    db=db
+                )
+
+            st.session_state.logged_in = True
+            st.session_state.user_email = st.session_state.pending_login["email"]
+            st.session_state.role = "user"
+
+            st.session_state.show_takeover_dialog = False
+
+            st.rerun()
+
+    with col2:
+        if st.button("Cancel"):
+            st.session_state.show_takeover_dialog = False
+            st.stop()

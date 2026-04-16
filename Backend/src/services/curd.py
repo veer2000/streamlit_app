@@ -62,7 +62,7 @@ def get_draft_response(emailContent):
 def get_user_hash_password(db:Session, email:str):
     try:
         # print(f'Email: {email}')
-        print(f'Function is {get_user_hash_password.__name__}')
+        # print(f'Function is {get_user_hash_password.__name__}')
         user_password = db.query(model.User).filter(model.User.email == email).first()
         if not user_password:
             print(f'User with email {email} does not exist')
@@ -102,7 +102,7 @@ def change_password(db:Session, user_email:str, new_password:str):
 def retrieve_drop_down_menu(db ):
     try:
         record = db.query(model.PriorityDetailList).filter(model.PriorityDetailList.id == 1).first()
-        print(f'type of result is {type(record)} result of get drop down {record} ')
+        # print(f'type of result is {type(record)} result of get drop down {record} ')
         return record.options
     except Exception as e:
         print(f'Error at {retrieve_drop_down_menu.__name__} : {e}')
@@ -116,7 +116,7 @@ def retrieve_drop_down_menu_for_user(db):
     except Exception as e:
         raise
 
-@st.cache_data
+# @st.cache_data
 def retrieve_drop_down_of_users(_db):
     try:
         # NOTE: if you want user id fetched for database it is already retrieved just need to change how to send retriever right now we only send name
@@ -177,6 +177,9 @@ def add_data_to_email_status_detail(tracking_data, db):
         print(f'Error in {add_data_to_email_status_detail.__name__} : {e}')
         raise
 
+
+
+# ////////////////////////////////////////////////////////////////////////////////////////
 def login_user_log_entry(user_email, db:Session):
     try:
         print('entered login_user_log_entry')
@@ -199,15 +202,41 @@ def login_user_log_entry(user_email, db:Session):
         raise
 
 
-def logout_user_log_entry(db:Session, user_email):
+def logout_user_log_entry(db:Session, user_email, type):
     try:
         logoutuser = db.query(model.UserActivityLog).filter(model.UserActivityLog.user == user_email).first()
         if logoutuser:
             logoutuser.log_out_time = datetime.datetime.now()
-            logoutuser.type = 'user'
+            logoutuser.type = type
         db.commit()
         print(f'Successfully added logout time to Database')
         return True
     except Exception as e:
         print(f'Error in {logout_user_log_entry.__name__} : {e}')
+        raise
+
+
+def new_user_log_entry(user_email, is_logged_in, session_id,  db:Session):
+    try:
+        print('inside new_user_log_entry to add new entry')
+        new_log = model.UserActivityLog(
+            user=user_email,
+            log_in_time=datetime.datetime.now(),
+            is_logged_in= is_logged_in,
+            session_id = session_id,
+            type="user",
+        )
+        db.add(new_log)
+        db.commit()
+        db.refresh(new_log)
+    except Exception as e:
+        print(f'Error in {new_user_log_entry.__name__} : {e}')
+        raise
+
+
+def find_user_log(db, email):
+    try:
+        return db.query(model.UserActivityLog).filter(model.UserActivityLog.user == email).first()
+    except Exception as e:
+        print(f'Error in {find_user_log.__name__} : {e}')
         raise

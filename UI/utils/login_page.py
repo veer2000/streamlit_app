@@ -2,12 +2,12 @@ import streamlit as st
 
 from Backend.src.routes.login import findUserById, loginUser
 from Backend.src.auth.deco import SessionLocal
-from Backend.src.services.utils import change_password_dialog
+from Backend.src.services.utils import change_password_dialog, takeover_dialog
 
 db = SessionLocal()
 
 #TODO: on login attach databse call to validate user and if user name is admin or role is assigned admin then we move to admin page
-def login_page_logic():
+def login_page_logic(passed_session_id):
     try:
         left_co, cent_co, last_co = st.columns(spec=[2.9, 3.9, 0.6], vertical_alignment="center")
 
@@ -39,18 +39,28 @@ def login_page_logic():
 
                             # 2. Check Database
                             with SessionLocal() as db_session:
-                                api_res = loginUser(username, password, db_session)
-
-                            # 3. Handle Result safely
+                                api_res = loginUser(email=username, password=password, passed_session_id=passed_session_id , db=db_session)
+                            print(f' printing user_name fetched from user table {api_res.get("user_name")}')
+                            if api_res.get("conflict"):
+                                st.session_state.show_takeover_dialog = True
+                                st.session_state.pending_login = {
+                                    "email": username,
+                                    "password": password
+                                }
+                                st.stop()
                             if api_res and api_res.get("status"):
                                 st.session_state.logged_in = True
                                 st.session_state.user_email = username
                                 st.session_state.id = api_res["user_id"]
-                                st.session_state.role = 'user'
+                                st.session_state.role = api_res['role'] #'user'
                                 st.session_state.set_cookie_now = True
                                 st.rerun()
                             else:
-                                st.error("Invalid credentials")
+                                error_detail = api_res.get("detail") if isinstance(api_res, dict) else None
+                                if error_detail:
+                                    st.error(error_detail)
+                                else:
+                                    st.error("Invalid credentials")
 
                 with cent_co_mid:
                     # This is now OUTSIDE the login button logic,

@@ -63,5 +63,7 @@ class UserActivityLog(Base):
     id = Column(Integer,primary_key=True,index=True)
     user = Column(String(255),index=True)
     log_in_time = Column(String(255),index=True)
-    log_out_time = Column(String(255),index=True)
+    log_out_time = Column(String(255),index=True,nullable=True)
+    is_logged_in = Column(Boolean, default=False)
+    session_id = Column(String(255), nullable=True)
     type = Column(String(255))

@@ -7,13 +7,12 @@ from Backend.src.services.utils import on_user_change, mark_change, validate_pri
     reset_priorities
 
 db = SessionLocal()
-print(f'From Admin Page')
 with SessionLocal() as db_session:
     priority_drop_down_list = retrieve_drop_down_menu(db)
     user_priority_drop_down_list = retrieve_drop_down_menu_for_user(db)
     user_drop_down_dict = retrieve_drop_down_of_users(db)
-print(f'testing result of priority_drop_down_list : {priority_drop_down_list}')
-print(f'testing result of user_priority_drop_down_list: {user_priority_drop_down_list}')
+# print(f'testing result of priority_drop_down_list : {priority_drop_down_list}')
+# print(f'testing result of user_priority_drop_down_list: {user_priority_drop_down_list}')
 if "user" not in st.session_state and user_drop_down_dict:
     # Safely pick the first key from your database dictionary
     st.session_state.user = list(user_drop_down_dict.keys())[0]
@@ -40,6 +39,7 @@ if st.session_state.submit_status:
 
 def admin_page_logic():
     with st.container():
+        print(f'From Admin Page')
         st.header("Admin Page", text_alignment="center")
         user_list = list(user_drop_down_dict.keys())
         _, content_col, _ = st.columns([1,2.9,1])
