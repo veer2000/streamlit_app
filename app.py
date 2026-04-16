@@ -125,7 +125,7 @@ def get_cookie_manager():
 
 controller = get_cookie_manager()
 if "logged_in" not in st.session_state:
-    st.session_state.logged_in = True
+    st.session_state.logged_in = False
 
 if "page" not in st.session_state:
     st.session_state.page = "login"
@@ -144,12 +144,6 @@ if "pending_user" not in st.session_state:
 
 def logout():
     print("from app - logout function")
-    # with SessionLocal() as db_session:
-        # if st.session_state.role == 'user':
-        #         logout_user_log_entry(db=db_session, user_email=st.session_state.user_email, type='user')
-        # else:
-        #         logout_user_log_entry(db=db_session, user_email=st.session_state.user_email, type='admin')
-
     try:
         controller.delete(cookie="auth_user_token")
     except Exception as e:
@@ -158,7 +152,7 @@ def logout():
     # dev_id = st.session_state.device_id
     st.session_state.clear()
     # st.session_state.device_id = dev_id
-    st.session_state["logged_in"] = False
+    st.session_state.logged_in = False
     st.session_state["page"] = "login"
 
     st.rerun()
@@ -200,7 +194,7 @@ def show_navbar():
             st.stop()
 
 
-
+print(f'lets check what is in {st.session_state.logged_in}')
 if not st.session_state.logged_in:
     show_login()
 else:
