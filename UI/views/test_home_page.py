@@ -71,7 +71,7 @@ def card1():
             st.session_state.drafted_text = st.session_state.current_email
         # Pass the stored email to the view function
         email = view_email(st.session_state.current_email)
-        msg_id = email[0]['id']
+        msg_id = email.get('id')
         st.session_state["msg_id"] = msg_id
         return email
     except Exception as e:

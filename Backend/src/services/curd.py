@@ -114,7 +114,7 @@ def retrieve_drop_down_menu_for_user(db):
     except Exception as e:
         raise
 
-@st.cache_data
+# @st.cache_data
 def retrieve_drop_down_of_users(_db):
     try:
         # NOTE: if you want user id fetched for database it is already retrieved just need to change how to send retriever right now we only send name

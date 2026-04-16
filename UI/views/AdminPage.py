@@ -18,27 +18,40 @@ if "user" not in st.session_state and user_drop_down_dict:
     # Safely pick the first key from your database dictionary
     st.session_state.user = list(user_drop_down_dict.keys())[0]
 
-if "submit_status" not in st.session_state:
-    st.session_state.submit_status = False
+# if "submit_status" not in st.session_state:
+#     st.session_state.submit_status = False
+#
+# # if "selected_user" not in st.session_state:
+# #     st.session_state.selected_user = None
+#
+# if "form_change" not in st.session_state:
+#     st.session_state.form_change = False
+#
+# if "show_warning" not in st.session_state:
+#     st.session_state.show_warning = False
+#
+# if "pending_user" not in st.session_state:
+#     st.session_state.pending_user = None
 
-if "selected_user" not in st.session_state:
-    st.session_state.selected_user = None
-
-if "form_change" not in st.session_state:
-    st.session_state.form_change = False
-
-if "show_warning" not in st.session_state:
-    st.session_state.show_warning = False
-
-if "pending_user" not in st.session_state:
-    st.session_state.pending_user = None
 
 
-if st.session_state.submit_status:
-    reset_priorities()
-    st.session_state.submit_status = False
 
 def admin_page_logic():
+    keys_to_init = {
+        "selected_user": None,
+        "submit_status": False,
+        "form_change": False,
+        "show_warning": False,
+        "pending_user": None
+    }
+
+    for key, value in keys_to_init.items():
+        if key not in st.session_state:
+            st.session_state[key] = value
+
+    if st.session_state.submit_status:
+        reset_priorities()
+        st.session_state.submit_status = False
     with st.container():
         st.header("Admin Page", text_alignment="center")
         user_list = list(user_drop_down_dict.keys())

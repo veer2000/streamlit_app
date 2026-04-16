@@ -4,14 +4,19 @@ import bcrypt
 import streamlit as st
 import re
 import inspect
-
+from bs4 import BeautifulSoup
 from .curd import change_password, add_priority_data_to_user
 from .database import SessionLocal
 
 func_name = inspect.currentframe().f_code.co_name
 
+@st.dialog("Email Summary")
+def show_summary_dialog(summary_text):
+    st.write(summary_text)
+
 def view_email(email_data):
     try:
+        # print(f'from view_email')
         """Card 1: Displays the incoming email details."""
         st.markdown("""
                     <style>
@@ -46,8 +51,13 @@ def view_email(email_data):
                 f'<div class="email-body-container">{clean_content}</div>',
                 unsafe_allow_html=True
             )
-
-            return email_data
+            soup = BeautifulSoup(clean_content, "html.parser")
+            plain_summary_text = soup.get_text(separator=" ", strip=True)
+            if st.button("Show Email Summary", type="tertiary"):
+                show_summary_dialog(plain_summary_text)
+        # st.session_state.view_email_count += 1
+        # print(f' and its count is {st.session_state.view_email_count}')
+        return email_data
     except Exception as e:
         print(f'Error at {view_email.__name__} : {e}')
         raise
