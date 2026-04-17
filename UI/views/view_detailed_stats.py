@@ -112,8 +112,6 @@ def view_detailed_stats_logic():
     #         st.session_state.display_df = df.copy()
     #         st.rerun()
 
-    st.title("Email Database Management", text_alignment='center')
-
     # ================= UI =================
     col1, col2, col3, col4, col5 = st.columns([2, 1.5, 1.5, 1.5, 1])
 
