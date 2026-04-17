@@ -36,7 +36,7 @@ def manage_page_logic():
         reset_priorities()
         st.session_state.submit_status = False
     with st.container():
-        st.header("Admin Page", text_alignment="center")
+        st.header("Manage Priority", text_alignment="center")
         user_list = list(user_drop_down_dict.keys())
         _, content_col, _ = st.columns([0.1,4,0.1])
         # user_dropdown_list = ["-","User 1", "User 2", "User 3"]

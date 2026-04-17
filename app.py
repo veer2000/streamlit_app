@@ -68,46 +68,44 @@ def show_login():
 
 
 def show_navbar():
-    col1, col2, col3 = st.columns([1, 8, 1])
+    col1, col2, col3 = st.columns([3, 10, 3])
     role = st.session_state.get("role")
+
+    # ===== LEFT BUTTON =====
     if role == "admin":
-        admin_page_nav_button = []
         with col1:
-            if st.button("🛠 Admin",width="stretch"):
+            if st.button("Manage Priority", use_container_width=True):
                 st.session_state.page = "admin"
-                if "admin_tab" not in st.session_state:
-                    st.session_state.admin_tab = "manage"
-    else:  # normal user
+                st.session_state.admin_tab = "manage"   # directly go to manage
+    else:
         with col1:
-            if st.button("🏠 Home"):
+            if st.button("🏠 Home", use_container_width=True):
                 st.session_state.page = "home"
 
+    # ===== CENTER NAV (ADMIN ONLY) =====
     if role == "admin" and st.session_state.get("page") == "admin":
 
         if "admin_tab" not in st.session_state:
             st.session_state.admin_tab = "manage"
 
         with col2:
-            c1, c2, c3, c4 = st.columns(4)
+            c1, c2, c3 = st.columns(3)
 
             with c1:
-                if st.button("Manage Priority", use_container_width=True):
-                    st.session_state.admin_tab = "manage"
-
-            with c2:
                 if st.button("User Activity", use_container_width=True):
                     st.session_state.admin_tab = "activity"
 
-            with c3:
+            with c2:
                 if st.button("Stats", use_container_width=True):
                     st.session_state.admin_tab = "stats"
 
-            with c4:
+            with c3:
                 if st.button("Detailed Stats", use_container_width=True):
                     st.session_state.admin_tab = "detailed"
 
+    # ===== RIGHT BUTTON =====
     with col3:
-        if st.button("🚪 Logout"):
+        if st.button("🚪 Logout", use_container_width=True):
             logout()
             st.stop()
 

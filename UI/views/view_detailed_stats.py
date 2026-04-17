@@ -1,72 +1,149 @@
 import streamlit as st
 import pandas as pd
 import os
-
-from pandas import DataFrame
 from sqlalchemy import create_engine
 from dotenv import load_dotenv
+import datetime
+
+from Backend.src.services.database import SessionLocal
+from Backend.src.services.model import EmailStatusDetail
+
+db = SessionLocal()
+
+@st.cache_data(ttl=30)
+def load_data():
+    try:
+        with SessionLocal() as db_session:
+            res = db_session.query(EmailStatusDetail).all()
+        df_is = pd.DataFrame([row.to_dict() for row in res])
+        print(f'from load_data of view_detailed_stats {df_is}')
+        return df_is
+        # convert all possible datetime columns
+    #     for col in df.columns:
+    #         if "date" in col.lower() or "time" in col.lower():
+    #             df[col] = pd.to_datetime(df[col], errors="coerce")
+    #
+    #     return df
+    #
+    except Exception as e:
+        st.error(f"❌ Connection Error: {e}")
+    #     return pd.DataFrame()
+
+def get_date_column(df):
+    try:
+        # priority
+        if "email_timestamp" in df.columns:
+            return "email_timestamp"
+
+        # fallback: any date/time column
+        for col in df.columns:
+            if "date" in col.lower() or "time" in col.lower():
+                return col
+
+        return None
+    except Exception as e:
+        print(f' error at get_date_column {e}')
+        raise
+
+def apply_filters(df, target_user, start_date, end_date, selected_status, date_col):
+    temp_df = df.copy()
+
+    if target_user:
+        temp_df = temp_df[temp_df["user"].str.contains(target_user, case=False, na=False)]
+
+    if date_col and start_date and end_date:
+        temp_df = temp_df[
+            (temp_df[date_col].dt.date >= start_date) &
+            (temp_df[date_col].dt.date <= end_date)
+        ]
+
+    if selected_status != "All":
+        temp_df = temp_df[temp_df["status"] == selected_status]
+
+    return temp_df
+
+def style_status(val):
+    val = str(val).lower()
+    if val == "completed":
+        return "color: green; font-weight: bold;"
+    elif val in ["failed", "not started"]:
+        return "color: red; font-weight: bold;"
+    elif val == "processing":
+        return "color: orange; font-weight: bold;"
+    return ""
 
 
-load_dotenv()
-st.set_page_config(layout="wide", page_title="Email Database")
+# ================= PREPARE DISPLAY =================
+def prepare_display_df(df):
+    display_df = df.copy()
+
+    if 'id' in display_df.columns:
+        display_df['id'] = range(1, len(display_df) + 1)
+
+    if "user" in display_df.columns:
+        display_df = display_df.sort_values(by="user", key=lambda col: col.str.lower())
+
+    if "msg_id" in display_df.columns:
+        display_df["msg_id"] = display_df["msg_id"].astype(str).str[:25]
+
+    display_df = display_df.drop(columns=['created_time'], errors='ignore')
+
+    return display_df
 
 
-USER = os.getenv('DB_USER')
-PASS = os.getenv('DB_PASS')
-DB_HOST = os.getenv('DB_HOST')
-DB_NAME = os.getenv('DB_NAME')
+def view_detailed_stats_logic():
+    st.header("Detailed Stats", text_alignment="center")
+    df = load_data()
 
-TABLE_NAME = "email_status_details"
+    if df.empty:
+        st.warning("No data available")
+        st.stop()
 
-# def load_data():
-#     try:
-#         engine = create_engine(f"mysql+mysqlconnector://{USER}:{PASS}@{DB_HOST}/{DB_NAME}")
-#         return pd.read_sql(f"SELECT * FROM {TABLE_NAME}", engine)
-#     except Exception as e:
-#         st.error(f"❌ Connection Error: {e}")
-#         return pd.DataFrame()
-#
-# df = load_data()
+    date_col = get_date_column(df)
 
-# if 'display_df' not in st.session_state:
-#     st.session_state.display_df = df.copy()
-#NOTE: need to return data fro db which is in table email_status_details
-def view_detail_stats_logic():
-    top_spacer, top_btn_col = st.columns([8, 1])
-    with top_btn_col:
-        # Clicking this button will now effectively "Restart" the app
-        if st.button("Back to DB", use_container_width=True):
-            st.session_state.display_df = df.copy()  # Wipe filters
-            st.rerun()  # Force immediate refresh
-
-    date_col = "email_timestamp"
-    user_col = "user"
-
-    if date_col in df.columns:
-        df[date_col] = pd.to_datetime(df[date_col], errors="coerce")
-
-    # SESSIon
+    # ================= SESSION =================
     if 'display_df' not in st.session_state:
         st.session_state.display_df = df.copy()
 
-    st.title("Email Database Management")
+    # ================= HEADER =================
+    # top_spacer, top_btn_col = st.columns([8, 1])
+    # with top_btn_col:
+    #     if st.button("Back to DB", use_container_width=True):
+    #         st.session_state.display_df = df.copy()
+    #         st.rerun()
 
-    # --- UI LAYOUT ---
+    st.title("Email Database Management", text_alignment='center')
+
+    # ================= UI =================
     col1, col2, col3, col4, col5 = st.columns([2, 1.5, 1.5, 1.5, 1])
 
     with col1:
         st.markdown("**Enter a user**")
         target_user = st.text_input("Username search", placeholder="e.g. Username", label_visibility="collapsed")
 
-    if date_col in df.columns:
+    if date_col:
+        if df[date_col].dtype == 'object':
+            df[date_col] = pd.to_datetime(df[date_col], errors='coerce')
+        min_date = df[date_col].min().date()
+        max_date = df[date_col].max().date()
+
         with col2:
             st.markdown("**Date From**")
-            start_date = st.date_input("S", value=df[date_col].min().date(), label_visibility="collapsed")
+            start_date = st.date_input("S", value=min_date, label_visibility="collapsed")
+
         with col3:
             st.markdown("**Date To**")
-            end_date = st.date_input("E", value=df[date_col].max().date(), label_visibility="collapsed")
+            end_date = st.date_input("E", value=max_date, label_visibility="collapsed")
     else:
         start_date, end_date = None, None
+
+        with col2:
+            st.markdown("**Date From**")
+            st.info("No date column")
+
+        with col3:
+            st.markdown("**Date To**")
+            st.info("No date column")
 
     with col4:
         st.markdown("**Status**")
@@ -77,61 +154,28 @@ def view_detail_stats_logic():
         st.markdown("**Action**")
         search_clicked = st.button("Search", use_container_width=True)
 
-    # --- LOGIC ---
+    # ================= CLICK =================
     if search_clicked:
-        temp_df = df.copy()
+        filtered_df = apply_filters(df, target_user, start_date, end_date, selected_status, date_col)
 
-        if target_user and user_col in temp_df.columns:
-            temp_df = temp_df[temp_df[user_col].str.contains(target_user, case=False, na=False)]
-            st.metric(label=f"Total entries for '{target_user}'", value=len(temp_df))
+        if target_user:
+            st.metric(label=f"Total entries for '{target_user}'", value=len(filtered_df))
 
-        if date_col in temp_df.columns and start_date and end_date:
-            temp_df = temp_df[
-                (temp_df[date_col].dt.date >= start_date) &
-                (temp_df[date_col].dt.date <= end_date)
-                ]
+        st.session_state.display_df = filtered_df
 
-        if selected_status != "All":
-            temp_df = temp_df[temp_df["status"] == selected_status]
-
-        # Save the filtered data to session state
-        st.session_state.display_df = temp_df
-
-    # --- RENDERING ---
-    def style_status(val):
-        val = str(val).lower()
-        if val == "completed":
-            return "color: green; font-weight: bold;"
-        elif val in ["failed", "not started"]:
-            return "color: red; font-weight: bold;"
-        elif val in ["processing"]:
-            return "color: yellow; font-weight: bold;"
-        return ""
-
-    # Always use the session state data for display
-    display_df = st.session_state.display_df
+    # ================= DISPLAY =================
+    display_df = prepare_display_df(st.session_state.display_df)
 
     if not display_df.empty:
-        if 'id' in display_df.columns:
-            display_df['id'] = display_df['id'].astype(str)
+        styled_df = display_df.style.applymap(style_status, subset=['status'])
 
-        # Truncate msg_id to 15 strictly
-        if "msg_id" in display_df.columns:
-            display_df["msg_id"] = display_df["msg_id"].astype(str).str[:25]
-
-        output_df = display_df.drop(columns=['created_time'], errors='ignore')
-
-        styled_df = output_df.style.applymap(style_status,
-                                             subset=['status']) if "status" in output_df.columns else output_df
-
-        # Using column_config to ensure the ID column is tight and has no formatting
         st.dataframe(
             styled_df,
             use_container_width=True,
             hide_index=True,
             column_config={
                 "id": st.column_config.TextColumn("id", width="small"),
-                "msg_id": st.column_config.TextColumn("Message ID", width="medium")
+                "msg_id": st.column_config.TextColumn("msg_id", width="medium")
             }
         )
     else:

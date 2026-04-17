@@ -41,6 +41,27 @@ class UserPriorityDetail(Base):
     priority_detail = Column(String(255))
     created_at =  Column(DateTime,default=datetime.now)
 
+class UserLogActivity(Base):
+    __tablename__ = "user_log_activity"
+    __table_args__ = {'extend_existing': True}
+    id = Column(Integer,primary_key=True,index=True)
+    user = Column(String(255),index=True)
+    log_in_time = Column(DateTime,default=datetime.now)
+    log_out_time = Column(DateTime,default=datetime.now)
+    is_logged_in = Column(Boolean,default=False,index=True)
+    session_id = Column(String(255),index=True)
+    auth_token = Column(String(255),index=True)
+    type = Column(String(255),index=True)
+
+    def to_dict(self):
+        """Convert SQLAlchemy object to a clean dictionary."""
+        return {
+            column.name: getattr(self, column.name)
+            for column in self.__table__.columns
+        }
+
+
+
 class EmailStatusDetail(Base):
     __tablename__ = "email_status_details"
     __table_args__ = {'extend_existing': True}
@@ -54,3 +75,10 @@ class EmailStatusDetail(Base):
     start_time = Column(DateTime,default=datetime.now)
     end_time = Column(DateTime,default=datetime.now)
     created_time = Column(DateTime,default=datetime.now)
+
+    def to_dict(self):
+        """Convert SQLAlchemy object to a clean dictionary."""
+        return {
+            column.name: getattr(self, column.name)
+            for column in self.__table__.columns
+        }

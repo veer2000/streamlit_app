@@ -1,73 +1,59 @@
 import streamlit as st
 import pandas as pd
+
+from Backend.src.services.database import SessionLocal
+from Backend.src.services.model import UserLogActivity
 from sqlalchemy import create_engine
 from dotenv import load_dotenv
 import os
 import datetime
 
-# ================= CONFIG =================
-st.set_page_config(layout="wide")
-load_dotenv()
+db = SessionLocal()
 
-USER = os.getenv("DB_USER")
-PASS = os.getenv("DB_PASS")
-HOST = os.getenv("DB_HOST")
-DB   = os.getenv("DB_NAME")
-
-engine = create_engine(f"mysql+pymysql://{USER}:{PASS}@{HOST}/{DB}")
-
-# ================= CACHE DATA =================
-@st.cache_data
+@st.cache_data(ttl=30)
 def load_data():
-    query = "SELECT * FROM streamlit.user_log_activity"
-    df = pd.read_sql(query, engine)
-    df["log_in_time"] = pd.to_datetime(df["log_in_time"], errors="coerce")
-    df["log_out_time"] = pd.to_datetime(df["log_out_time"], errors="coerce")
-    return df
+    try:
+        # query = "SELECT * FROM streamlit.user_log_activity"
+        # df = pd.read_sql(query, engine)
+        with SessionLocal() as db_session:
+            res = db_session.query(UserLogActivity).all()
+        df_is = pd.DataFrame([row.to_dict() for row in res])
+        print(f'res form Load_data is {df_is}')
+        for col in df_is.columns:
+            if "date" in col.lower() or "time" in col.lower():
+                df_is[col] = pd.to_datetime(df_is[col], errors="coerce")
 
-df = load_data()
-
-if df.empty:
-    st.warning("No data available")
-    st.stop()
-
-# ================= DATE RANGE =================
-date_col = "log_in_time"
-
-min_date = df[date_col].dropna().min()
-max_date = df[date_col].dropna().max()
-
-if pd.isna(min_date) or pd.isna(max_date):
-    st.error("Invalid date data")
-    st.stop()
-
-min_db_date = min_date.date()
-today = datetime.date.today()
-
-# ================= USER LIST =================
-user_list = sorted(df["user"].dropna().unique())
-user_list.insert(0, "All")
-
+        return df_is
+    except Exception as e:
+        print(f'error at load_data: {e}')
+        raise
 
 def view_user_activity_logic():
-    # ================= UI LAYOUT =================
-    left, center, right = st.columns([1, 4, 1])
+    st.header("User Activity Log", text_alignment="center")
+    df_ui = load_data()
+    if df_ui.empty:
+        st.warning("No data available")
+        st.stop()
 
-    with center:
-        st.markdown("<h1 style='text-align:left;'>User Log Activity</h1>", unsafe_allow_html=True)
+    date_col = None
+    for col in df_ui.columns:
+        if "date" in col.lower() or "time" in col.lower():
+            date_col = col
+            break
 
-        # ================= FORM =================
-        with st.form("filter_form"):
+    user_list = sorted(df_ui["user"].dropna().unique())
+    user_list.insert(0, "All")
 
-            col1, col2, col3, col4 = st.columns([1.5, 1.5, 1.5, 1])
+    with st.form("filter_form"):
 
+        col1, col2, col3, col4 = st.columns([1.5, 1.5, 1.5, 1])
+
+        if date_col:
             with col1:
                 st.markdown("**Date From**")
                 start_date = st.date_input(
                     "Start",
-                    value=min_db_date,
-                    min_value=min_db_date,
-                    max_value=today,
+                    value=df_ui[date_col].min().date(),
                     label_visibility="collapsed"
                 )
 
@@ -75,40 +61,48 @@ def view_user_activity_logic():
                 st.markdown("**Date To**")
                 end_date = st.date_input(
                     "End",
-                    value=today,
+                    value=start_date,
                     min_value=start_date,
-                    max_value=today,
+                    max_value=datetime.date.today(),
                     label_visibility="collapsed"
                 )
+        else:
+            start_date, end_date = None, None
 
-            with col3:
-                st.markdown("**User**")
-                selected_user = st.selectbox(
-                    "User",
-                    options=user_list,
-                    label_visibility="collapsed"
-                )
+            with col1:
+                st.markdown("**Date From**")
+                st.info("No date column found")
 
-            with col4:
-                st.markdown("&nbsp;", unsafe_allow_html=True)
-                submit = st.form_submit_button("Search", use_container_width=True)
+            with col2:
+                st.markdown("**Date To**")
+                st.info("No date column found")
 
-        # ================= FILTER LOGIC =================
-        filtered_df = df.copy()
+        with col3:
+            st.markdown("**User**")
+            selected_user = st.selectbox(
+                "User",
+                options=user_list,
+                label_visibility="collapsed"
+            )
 
-        if submit:
-            filtered_df = filtered_df[
-                (filtered_df[date_col].dt.date >= start_date) &
-                (filtered_df[date_col].dt.date <= end_date)
+        with col4:
+            st.markdown("&nbsp;", unsafe_allow_html=True)
+            submit = st.form_submit_button("Search", use_container_width=True)
+
+        # filtered_df = df_ui.copy()
+
+        if submit and date_col and start_date and end_date:
+            df_ui = df_ui[
+                (df_ui[date_col].dt.date >= start_date) &
+                (df_ui[date_col].dt.date <= end_date)
                 ]
 
             if selected_user != "All":
-                filtered_df = filtered_df[
-                    filtered_df["user"] == selected_user
+                df_ui = df_ui[
+                    df_ui["user"] == selected_user
                     ]
 
-        # ================= FORMAT TABLE =================
-        temp_df = filtered_df.copy()
+        temp_df = df_ui.copy()
 
         if "user" in temp_df.columns:
             temp_df = temp_df.sort_values(by="user", key=lambda col: col.str.lower())
@@ -116,20 +110,25 @@ def view_user_activity_logic():
         if not temp_df.empty:
             temp_df["id"] = range(1, len(temp_df) + 1)
 
-        temp_df["log_in_time"] = temp_df["log_in_time"].dt.strftime("%Y-%m-%d %H:%M:%S")
-        temp_df["log_out_time"] = temp_df["log_out_time"].dt.strftime("%Y-%m-%d %H:%M:%S")
+        # format only if column exists
+        if "log_in_time" in temp_df.columns:
+            temp_df["log_in_time"] = temp_df["log_in_time"].dt.strftime("%Y-%m-%d %H:%M:%S")
+
+        if "log_out_time" in temp_df.columns:
+            temp_df["log_out_time"] = temp_df["log_out_time"].dt.strftime("%Y-%m-%d %H:%M:%S")
 
         cols = ["id", "user", "log_in_time", "log_out_time", "is_logged_in", "device_id", "session_id", "type"]
         temp_df = temp_df[[c for c in cols if c in temp_df.columns]]
 
-        # Dynamic table height
-        row_height = 35
-        table_height = min(len(temp_df) * row_height + 40, 600)
+        if not temp_df.empty:
+            row_height = 35
+            table_height = min(len(temp_df) * row_height + 40, 600)
 
-        # ================= DISPLAY =================
-        st.dataframe(
-            temp_df,
-            use_container_width=True,
-            hide_index=True,
-            height=table_height
-        )
+            st.dataframe(
+                temp_df,
+                use_container_width=True,
+                hide_index=True,
+                height=table_height
+            )
+        else:
+            st.warning("No records found.")
