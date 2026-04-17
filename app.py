@@ -4,7 +4,7 @@ import streamlit as st
 import extra_streamlit_components as cookie_manager
 from Backend.src.services.curd import logout_user_log_entry, find_user_log
 from Backend.src.services.database import SessionLocal
-from Backend.src.services.utils import get_session_id, takeover_dialog
+from Backend.src.services.utils import get_session_id, validate_session
 from UI.utils.login_page import login_page_logic
 from UI.views.AdminPage import admin_page_logic
 from UI.views.HomePage import homepage
@@ -12,6 +12,55 @@ import uuid
 
 
 st.set_page_config(page_title="Email Project", page_icon="📦", layout="wide")
+
+
+@st.dialog("⚠️ Active Session Found")
+def takeover_dialog():
+    try:
+        st.warning("You are already logged in in another tab.")
+
+        col1, col2 = st.columns(2)
+        st.session_state.session_id = str(uuid.uuid4())
+        with col1:
+            if st.button("Take Over"):
+                email = st.session_state.pending_login["email"]
+                role = st.session_state.get("role", "user")
+
+                with SessionLocal() as db_session:
+                    logout_user_log_entry(db_session, email, role)
+
+                    user_log = find_user_log(db_session, email)
+
+                    if user_log:
+                        user_log.session_id = st.session_state.session_id
+                        user_log.is_logged_in = True
+                        user_log.log_out_time = None
+
+                        db_session.commit()
+
+                st.session_state.logged_in = True
+                st.session_state.user_email = email
+                st.session_state.show_takeover_dialog = False
+
+                # 🔥 IMPORTANT
+                st.session_state.session_id = str(uuid.uuid4())
+
+                st.rerun()
+
+        with col2:
+            if st.button("Cancel"):
+                st.session_state.show_takeover_dialog = False
+                logout()
+                st.rerun()
+
+    except Exception as e:
+        st.error(f"Error in takeover_dialog: {e}")
+
+
+if st.session_state.get("show_takeover_dialog"):
+    takeover_dialog()
+    st.stop()
+
 
 # @st.cache_resource
 def get_cookie_manager():
@@ -27,46 +76,11 @@ session_id = st.session_state.session_id
 # print(f'session id is {session_id}')
 auth_token = controller.get('auth_user_token')
 
-# cookie_device_id = controller.get("device_id")
 
-# if "device_id" not in st.session_state:
-#     temp_id = str(uuid.uuid4())
-#     print(f"[INIT] Temporary device_id: {temp_id}")
-#     st.session_state.device_id = temp_id
-
-# cookie_device_id = controller.get("device_id")
-
-# if cookie_device_id:
-#     if st.session_state.device_id != cookie_device_id:
-#         print(f"[SYNC] Overriding session with cookie: {cookie_device_id}")
-#         st.session_state.device_id = cookie_device_id
-# else:
-#     if "cookie_written" not in st.session_state:
-#         print(f"[SYNC] Writing cookie: {st.session_state.device_id}")
-#
-#         controller.set(
-#             "device_id",
-#             st.session_state.device_id,
-#             expires_at=datetime.datetime.now() + datetime.timedelta(days=365)
-#         )
-#
-#         st.session_state.cookie_written = True
-#
-# device_id = st.session_state.device_id
-
-# if not device_id:
-#     print(f'device_id not found {device_id} hence generating new')
-#     device_id = str(uuid.uuid4())
-#     # Set a long-lived cookie (1 year) to identify this browser instance
-#     controller.set('device_id', device_id, expires_at=datetime.datetime.now() + datetime.timedelta(days=365))
-
-
-# print(f' device id {device_id} and sessionid is {session_id}')
-# if "logged_in" not in st.session_state:
-#     st.session_state.logged_in = False
-#
-# if "page" not in st.session_state:
-#     st.session_state.page = "login"
+if "pending_login" not in st.session_state:
+    st.session_state.pending_login = {"email": None}
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
 
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
@@ -84,25 +98,15 @@ if not st.session_state.logged_in and auth_token:
     if "role" not in st.session_state:
         st.session_state.role = "user" # Default or fetch from DB
 
-def validate_session(db_sess, email, passed_session_id):
-    # session_id = get_session_id()
+#
+# if st.session_state.get("show_takeover_dialog"):
+#     print(f'first if in main')
+#     with SessionLocal() as db_session:
+#         takeover_dialog()
 
-    user_log = find_user_log(db_sess, email)
-
-    if not user_log:
-        return False
-
-    if user_log.session_id != passed_session_id:
-        return False
-
-    if not user_log.is_logged_in:
-        return False
-    return True
-
-
-def show_login(passed_session_id):
+def show_login(controller_ob, passed_session_id):
     try:
-        login_page_logic(passed_session_id=passed_session_id)
+        login_page_logic(controller_ob, passed_session_id=passed_session_id, )
 
         if st.session_state.get("logged_in"):
             controller.set('auth_user_token', st.session_state.user_email, expires_at=datetime.datetime.now() + datetime.timedelta(days=1))
@@ -117,26 +121,38 @@ def show_login(passed_session_id):
         print(f"Login error: {e}")
 
 
+
 def logout():
     print("from app - logout function")
-    with SessionLocal() as db_session:
-        if st.session_state.role == 'user':
-                logout_user_log_entry(db=db_session, user_email=st.session_state.user_email, type='user')
-        else:
-                logout_user_log_entry(db=db_session, user_email=st.session_state.user_email, type='admin')
+
+    # Use .get() to avoid the AttributeError/KeyError
+    user_email = st.session_state.get("user_email")
+    user_role = st.session_state.get("role", "user")  # Default to 'user' if role is missing
+
+    # Only run DB logic if we have an email
+    if user_email:
+        try:
+            with SessionLocal() as db_session:
+                logout_user_log_entry(
+                    db=db_session,
+                    user_email=user_email,
+                    type_is=user_role
+                )
+        except Exception as e:
+            print(f"DB Logout entry failed: {e}")
 
     try:
         controller.delete(cookie="auth_user_token")
     except Exception as e:
         print(f"Cookie delete skipped: {e}")
 
-    # dev_id = st.session_state.device_id
+    # Clear and reset state safely
     st.session_state.clear()
-    # st.session_state.device_id = dev_id
     st.session_state["logged_in"] = False
     st.session_state["page"] = "login"
 
     st.rerun()
+
 
 def show_navbar():
     col1, col2, col3 = st.columns([1, 8, 1])
@@ -157,25 +173,30 @@ def show_navbar():
             st.stop()
 
 
-if st.session_state.get("show_takeover_dialog"):
-    takeover_dialog()
+
 
 if not st.session_state.logged_in:
-    show_login(passed_session_id = session_id)
+    show_login(controller_ob=controller, passed_session_id=session_id)
 else:
     print('at else part of not st.session_state.logged_in')
+
     with SessionLocal() as db:
-        print(' inside with of part of not st.session_state.logged_in')
         valid = validate_session(
-            db_sess = db,
-            email = st.session_state.user_email,
-            passed_session_id= session_id
+            db_sess=db,
+            email=st.session_state.user_email,
+            passed_session_id=session_id
         )
-        print(f'valid is {valid}')
 
     if not valid:
-        st.warning("Session Exist's in another tab")
-        logout()   # clears session + cookie
+        st.warning("Session Exists in another tab")
+
+        st.session_state.show_takeover_dialog = True
+
+        if "pending_login" not in st.session_state:
+            st.session_state.pending_login = {
+                "email": st.session_state.user_email
+            }
+
         st.stop()
     if st.session_state.page == "login":
         if st.session_state.get("role") == "admin":
@@ -188,7 +209,9 @@ else:
     show_navbar()
 
     if st.session_state.page == "home":
+        # print(f'from home st.session_state.role = {st.session_state.role}')
         homepage()
 
     elif st.session_state.page == "admin":
+        # print(f'from admin st.session_state.role = {st.session_state.role}')
         admin_page_logic()

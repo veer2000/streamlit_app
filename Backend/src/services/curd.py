@@ -202,12 +202,13 @@ def login_user_log_entry(user_email, db:Session):
         raise
 
 
-def logout_user_log_entry(db:Session, user_email, type):
+def logout_user_log_entry(db:Session, user_email, type_is):
     try:
-        logoutuser = db.query(model.UserActivityLog).filter(model.UserActivityLog.user == user_email).first()
+        logoutuser =  db.query(model.UserActivityLog).filter(model.UserActivityLog.user == user_email).first()
         if logoutuser:
             logoutuser.log_out_time = datetime.datetime.now()
-            logoutuser.type = type
+            logoutuser.is_logged_in = False
+            logoutuser.type = type_is
         db.commit()
         print(f'Successfully added logout time to Database')
         return True

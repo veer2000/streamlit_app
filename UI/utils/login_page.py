@@ -2,12 +2,11 @@ import streamlit as st
 
 from Backend.src.routes.login import findUserById, loginUser
 from Backend.src.auth.deco import SessionLocal
-from Backend.src.services.utils import change_password_dialog, takeover_dialog
+from Backend.src.services.utils import change_password_dialog
 
-db = SessionLocal()
 
 #TODO: on login attach databse call to validate user and if user name is admin or role is assigned admin then we move to admin page
-def login_page_logic(passed_session_id):
+def login_page_logic(controller, passed_session_id):
     try:
         left_co, cent_co, last_co = st.columns(spec=[2.9, 3.9, 0.6], vertical_alignment="center")
 
@@ -36,11 +35,12 @@ def login_page_logic(passed_session_id):
                                 st.session_state.role = 'admin'
                                 st.session_state.set_cookie_now = True
                                 st.rerun()
-
+                            st.session_state.pending_login["email"] = username
                             # 2. Check Database
                             with SessionLocal() as db_session:
                                 api_res = loginUser(email=username, password=password, passed_session_id=passed_session_id , db=db_session)
-                            print(f' printing user_name fetched from user table {api_res.get("user_name")}')
+                            print(f'result of api_res is {api_res} ')
+                            print(f' printing user_name fetched from user table {api_res.get("user_name")} and role is {api_res.get("user_role")}')
                             if api_res.get("conflict"):
                                 st.session_state.show_takeover_dialog = True
                                 st.session_state.pending_login = {
@@ -52,8 +52,10 @@ def login_page_logic(passed_session_id):
                                 st.session_state.logged_in = True
                                 st.session_state.user_email = username
                                 st.session_state.id = api_res["user_id"]
-                                st.session_state.role = api_res['role'] #'user'
+                                st.session_state.role = api_res['user_role'] #'user'
                                 st.session_state.set_cookie_now = True
+                                controller.set("auth_user_token", api_res["auth_token"])
+
                                 st.rerun()
                             else:
                                 error_detail = api_res.get("detail") if isinstance(api_res, dict) else None

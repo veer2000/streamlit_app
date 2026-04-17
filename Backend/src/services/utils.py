@@ -1,5 +1,4 @@
-import datetime
-import inspect
+import uuid
 
 import bcrypt
 import streamlit as st
@@ -9,7 +8,7 @@ import inspect
 from bs4 import BeautifulSoup
 from streamlit.runtime.scriptrunner_utils.script_run_context import get_script_run_ctx
 
-from .curd import change_password, add_priority_data_to_user, find_user_log
+from .curd import change_password, add_priority_data_to_user, find_user_log, logout_user_log_entry
 from .database import SessionLocal
 
 func_name = inspect.currentframe().f_code.co_name
@@ -283,40 +282,31 @@ def next_email_logic(submit_button_flag):
 
 
 def force_login(email, passed_session_id, db):
-    user_log = find_user_log(db, email)
+    try:
+        logout_user_log_entry(db, email, st.session_state.get("role")) #db:Session, user_email, type
+        # user_log = find_user_log(db, email)
+        # print(f' passed session_id is {passed_session_id}')
+        # user_log.session_id = passed_session_id
+        # user_log.is_logged_in = True
+        # user_log.log_in_time = datetime.datetime.now()
 
-    user_log.session_id = passed_session_id
-    user_log.is_logged_in = True
-    user_log.log_in_time = datetime.datetime.now()
+        # db.commit()
+    except Exception as e:
+        print(f' error at force_login{e}')
+        raise
 
-    db.commit()
 
-@st.dialog("⚠️ Active Session Found")
-def takeover_dialog():
+def validate_session(db_sess, email, passed_session_id):
+    # session_id = get_session_id()
 
-    st.warning("You are already logged in in another tab.")
+    user_log = find_user_log(db_sess, email)
 
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("Take Over"):
+    if not user_log:
+        return False
 
-            with SessionLocal() as db:
-                # call your backend force login
-                force_login(
-                    email=st.session_state.pending_login["email"],
-                    passed_session_id=st.session_state.session_id,
-                    db=db
-                )
+    if user_log.session_id != passed_session_id:
+        return False
 
-            st.session_state.logged_in = True
-            st.session_state.user_email = st.session_state.pending_login["email"]
-            st.session_state.role = "user"
-
-            st.session_state.show_takeover_dialog = False
-
-            st.rerun()
-
-    with col2:
-        if st.button("Cancel"):
-            st.session_state.show_takeover_dialog = False
-            st.stop()
+    if not user_log.is_logged_in:
+        return False
+    return True
