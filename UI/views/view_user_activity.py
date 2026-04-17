@@ -48,80 +48,88 @@ today = datetime.date.today()
 user_list = sorted(df["user"].dropna().unique())
 user_list.insert(0, "All")
 
-# ================= UI LAYOUT =================
-left, center, right = st.columns([1, 4, 1])
 
-with center:
-    st.markdown("<h1 style='text-align:left;'>User Log Activity</h1>", unsafe_allow_html=True)
+def view_user_activity_logic():
+    # ================= UI LAYOUT =================
+    left, center, right = st.columns([1, 4, 1])
 
-    # ================= FORM =================
-    with st.form("filter_form"):
+    with center:
+        st.markdown("<h1 style='text-align:left;'>User Log Activity</h1>", unsafe_allow_html=True)
 
-        col1, col2, col3, col4 = st.columns([1.5, 1.5, 1.5, 1])
+        # ================= FORM =================
+        with st.form("filter_form"):
 
-        with col1:
-            st.markdown("**Date From**")
-            start_date = st.date_input(
-                "Start",
-                value=min_db_date,
-                min_value=min_db_date,
-                max_value=today,
-                label_visibility="collapsed"
-            )
+            col1, col2, col3, col4 = st.columns([1.5, 1.5, 1.5, 1])
 
-        with col2:
-            st.markdown("**Date To**")
-            end_date = st.date_input(
-                "End",
-                value=today,
-                min_value=start_date,
-                max_value=today,
-                label_visibility="collapsed"
-            )
+            with col1:
+                st.markdown("**Date From**")
+                start_date = st.date_input(
+                    "Start",
+                    value=min_db_date,
+                    min_value=min_db_date,
+                    max_value=today,
+                    label_visibility="collapsed"
+                )
 
-        with col3:
-            st.markdown("**User**")
-            selected_user = st.selectbox(
-                "User",
-                options=user_list,
-                label_visibility="collapsed"
-            )
+            with col2:
+                st.markdown("**Date To**")
+                end_date = st.date_input(
+                    "End",
+                    value=today,
+                    min_value=start_date,
+                    max_value=today,
+                    label_visibility="collapsed"
+                )
 
-        with col4:
-            st.markdown("&nbsp;", unsafe_allow_html=True)
-            submit = st.form_submit_button("Search", use_container_width=True)
+            with col3:
+                st.markdown("**User**")
+                selected_user = st.selectbox(
+                    "User",
+                    options=user_list,
+                    label_visibility="collapsed"
+                )
 
-    # ================= FILTER LOGIC =================
-    filtered_df = df.copy()
+            with col4:
+                st.markdown("&nbsp;", unsafe_allow_html=True)
+                submit = st.form_submit_button("Search", use_container_width=True)
 
-    if submit:
-        filtered_df = filtered_df[
-            (filtered_df[date_col].dt.date >= start_date) &
-            (filtered_df[date_col].dt.date <= end_date)
-        ]
+        # ================= FILTER LOGIC =================
+        filtered_df = df.copy()
 
-        if selected_user != "All":
+        if submit:
             filtered_df = filtered_df[
-                filtered_df["user"] == selected_user
-            ]
+                (filtered_df[date_col].dt.date >= start_date) &
+                (filtered_df[date_col].dt.date <= end_date)
+                ]
 
-    # ================= FORMAT TABLE =================
-    temp_df = filtered_df.copy()
+            if selected_user != "All":
+                filtered_df = filtered_df[
+                    filtered_df["user"] == selected_user
+                    ]
 
-    temp_df["log_in_time"] = temp_df["log_in_time"].dt.strftime("%Y-%m-%d %H:%M:%S")
-    temp_df["log_out_time"] = temp_df["log_out_time"].dt.strftime("%Y-%m-%d %H:%M:%S")
+        # ================= FORMAT TABLE =================
+        temp_df = filtered_df.copy()
 
-    cols = ["id", "user", "log_in_time", "log_out_time", "is_logged_in", "device_id", "session_id", "type"]
-    temp_df = temp_df[[c for c in cols if c in temp_df.columns]]
+        if "user" in temp_df.columns:
+            temp_df = temp_df.sort_values(by="user", key=lambda col: col.str.lower())
 
-    # Dynamic table height
-    row_height = 32
-    table_height = min(len(temp_df) * row_height + 60, 500)
+        if not temp_df.empty:
+            temp_df["id"] = range(1, len(temp_df) + 1)
 
-    # ================= DISPLAY =================
-    st.dataframe(
-        temp_df,
-        use_container_width=True,
-        hide_index=True,
-        height=table_height
-    )
+        temp_df["log_in_time"] = temp_df["log_in_time"].dt.strftime("%Y-%m-%d %H:%M:%S")
+        temp_df["log_out_time"] = temp_df["log_out_time"].dt.strftime("%Y-%m-%d %H:%M:%S")
+
+        cols = ["id", "user", "log_in_time", "log_out_time", "is_logged_in", "device_id", "session_id", "type"]
+        temp_df = temp_df[[c for c in cols if c in temp_df.columns]]
+
+        # Dynamic table height
+        row_height = 35
+        table_height = min(len(temp_df) * row_height + 40, 600)
+
+        # ================= DISPLAY =================
+        st.dataframe(
+            temp_df,
+            use_container_width=True,
+            hide_index=True,
+            height=table_height
+        )

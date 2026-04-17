@@ -137,3 +137,11 @@ def add_priority_data_to_user(db,selected_id, user, priority1, priority2, priori
     except Exception as e:
         print(f'Error in {add_priority_data_to_user.__name__} : {e}')
         raise
+
+def summary_of_complete_email_table_data(db):
+        data = db.query(EmailStatusDetail).all()
+        # Convert list of objects to DataFrame
+        df = pd.DataFrame([u.__dict__ for u in data])
+        if not df.empty:
+            df.drop(columns=['_sa_instance_state'], inplace=True)
+        return df
