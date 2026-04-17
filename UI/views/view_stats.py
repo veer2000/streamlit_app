@@ -1,10 +1,7 @@
 import plt
 import streamlit as st
 import pandas as pd
-from sqlalchemy import create_engine
-import os
-import datetime
-from dotenv import load_dotenv
+from matplotlib.ticker import MaxNLocator
 
 from Backend.src.services.database import SessionLocal
 from Backend.src.services.model import EmailStatusDetail
@@ -31,121 +28,142 @@ def load_email_data():
     return df_is
 
 
+def get_filtered_data(df_ui, date_col, start_date, end_date, submit_clicked):
+    df = df_ui.copy()
+
+    if submit_clicked:
+        df = df_ui[
+            (df_ui[date_col].dt.date >= start_date) &
+            (df_ui[date_col].dt.date <= end_date)
+        ].copy()
+
+    return df
+
+def build_pie_chart(result):
+    fig, ax = plt.subplots(figsize=(5, 5))
+
+    labels = [
+        f"{u} ({c})"
+        for u, c in zip(result["Username"], result["Completed_Emails"])
+    ]
+
+    ax.pie(
+        result["Completed_Emails"],
+        labels=labels,
+        autopct="%1.1f%%",
+        startangle=90,
+        wedgeprops={"edgecolor": "white"}
+    )
+
+    ax.set_title("Responded Emails by User")
+    st.pyplot(fig)
+
+def build_bar_chart(completed_df, date_col):
+    daily_counts = (
+        completed_df
+        .groupby(completed_df[date_col].dt.date)
+        .size()
+        .reset_index(name="Count")
+    )
+
+    daily_counts.columns = ["Date", "Count"]
+    daily_counts = daily_counts.sort_values("Date")
+
+    daily_counts["Date_str"] = daily_counts["Date"].apply(
+        lambda x: x.strftime('%d-%b')
+    )
+
+    fig, ax = plt.subplots(figsize=(6, 5))
+
+    x_pos = range(len(daily_counts))
+
+    ax.bar(
+        x_pos,
+        daily_counts["Count"],
+        width=0.6,
+        edgecolor="black",
+        color="#222222",
+        alpha=0.8
+    )
+
+    ax.set_xticks(x_pos)
+    ax.set_xticklabels(daily_counts["Date_str"], rotation=45, fontsize=9)
+    ax.yaxis.set_major_locator(MaxNLocator(integer=True))
+    ax.yaxis.grid(True, linestyle="--", alpha=0.3)
+    ax.set_title("Responded Emails by Day")
+
+    st.pyplot(fig)
+
 def view_stats_logic():
     try:
-        st.header("View Stats", text_alignment="center")
-        # ================= UI =================
+        st.header("User Stats", text_alignment="center")
         df_ui = load_email_data()
 
-        # -------- AUTO DETECT DATE COLUMN --------
-        date_col = None
-        for col in df_ui.columns:
-            if "date" in col.lower() or "time" in col.lower():
-                date_col = col
-                break
+        if df_ui.empty:
+            st.warning("No data available")
+            st.stop()
 
-        col1, col2, col3 = st.columns([1.5, 1.5, 1])
+        date_col = "end_time"
 
-        if date_col:
+        # ================= FILTER UI =================
+        with st.form("filter_form"):
+
+            col1, col2, col3 = st.columns([2, 2, 1])
+
+            min_db_date = df_ui[date_col].min().date()
+            max_db_date = df_ui[date_col].max().date()
+
             with col1:
-                st.markdown("**Date From**")
                 start_date = st.date_input(
-                    "Start",
-                    value=df_ui[date_col].min().date(),
-                    label_visibility="collapsed"
+                    "Start Date",
+                    value=min_db_date,
+                    format="YYYY/MM/DD"
                 )
 
             with col2:
-                st.markdown("**Date To**")
                 end_date = st.date_input(
-                    "End",
-                    value=start_date,
-                    min_value=start_date,
-                    max_value=datetime.date.today(),
-                    label_visibility="collapsed"
+                    "End Date",
+                    value=max_db_date,
+                    format="YYYY/MM/DD"
                 )
-        else:
-            start_date, end_date = None, None
 
-            with col1:
-                st.markdown("**Date From**")
-                st.info("No date column available")
+            with col3:
+                st.markdown("<br>", unsafe_allow_html=True)
+                submit_button = st.form_submit_button(
+                    "Search",
+                    use_container_width=True
+                )
 
-            with col2:
-                st.markdown("**Date To**")
-                st.info("No date column available")
+        # ================= DATA PROCESSING =================
+        df = get_filtered_data(df_ui, date_col, start_date, end_date, submit_button)
 
-        with col3:
-            st.markdown("&nbsp;", unsafe_allow_html=True)
-            search_clicked = st.button("Search", use_container_width=True)
+        completed_df = df[df["status"] == "completed"]
 
-        df_res = load_email_data()
-        temp_df = df_res.copy()
-
-        # -------- FILTER --------
-        if search_clicked and date_col and start_date and end_date:
-            temp_df = temp_df[
-                (temp_df[date_col].dt.date >= start_date) &
-                (temp_df[date_col].dt.date <= end_date)
-                ]
-
-        # -------- SUMMARY --------
-        completed_df = temp_df[temp_df["status"] == "completed"]
+        if completed_df.empty:
+            st.warning("No completed emails found for this range.")
+            st.stop()
 
         result = (
             completed_df.groupby("user")
             .size()
             .reset_index(name="Completed_Emails")
+            .rename(columns={"user": "Username"})
+            .sort_values("Username")
         )
 
-        if not result.empty:
-            result = result.rename(columns={"user": "Username"})
-            result = result.sort_values(by="Username")
+        # ================= CHARTS =================
+        st.markdown("### Analytics")
 
-        # -------- PIE CHART --------
-        # if not result.empty:
-        #     col_left, col_center, col_right = st.columns([1, 2, 1])
-        #
-        #     with col_center:
-        #         fig, ax = plt.subplots(figsize=(5, 5))
-        #
-        #         labels = [
-        #             f"{user} ({count})"
-        #             for user,
-        #             count in zip(result["Username"],
-        #                          result["Completed_Emails"])
-        #         ]
-        #
-        #         ax.pie(
-        #             result["Completed_Emails"],
-        #             labels=labels,
-        #             autopct="%1.1f%%",
-        #             startangle=90,
-        #             wedgeprops={'edgecolor': 'white'}
-        #         )
-        #
-        #         ax.set_title("Responded Emails", fontsize=14)
-        #         st.pyplot(fig)
+        c1, c2 = st.columns(2, gap="large")
 
-        # -------- TABLE --------
-        if not result.empty:
-            col_left, col_center, col_right = st.columns([0.5, 3, 0.5])
+        with c1:
+            build_pie_chart(result)
 
-            with col_center:
-                st.dataframe(
-                    result,
-                    use_container_width=True,
-                    hide_index=True,
-                    height=min(800, (len(result) + 1) * 35),
-                    column_config={
-                        "Username": st.column_config.TextColumn("Username", width="medium"),
-                        "Completed_Emails": st.column_config.NumberColumn("Count", width="small")
-                    }
-                )
-        else:
-            col_left, col_center, col_right = st.columns([1, 2, 1])
-            with col_center:
-                st.warning("No records found.")
+        with c2:
+            build_bar_chart(completed_df, date_col)
 
+        # ================= TABLE =================
+        st.markdown("### User Summary Table")
+        st.dataframe(result, use_container_width=True, hide_index=True)
     except Exception as e:
         print(f"\033[91mError is {e}\033[0m")
