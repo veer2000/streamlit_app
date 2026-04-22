@@ -24,6 +24,7 @@ def loginUser(email:str, password: str, db:Session=Depends(get_db)): # request :
         if validate_password(password.encode('utf-8'), hashed_pass.encode('utf-8')):
             user_is = get_allocated_email_original(db, email, hashed_pass)
             return {"user_id":user_is.id,
+                    "role":user_is.role,
                     "status": True}
         else:
             raise HTTPException(status_code=404, detail="Incorrect email or password")

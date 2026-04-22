@@ -29,23 +29,23 @@ def login_page_logic():
                             st.warning("Please enter both fields.")
                         else:
                             # 1. Check Admin
-                            if username == "admin@mail.com" and password == "admin1":
-                                st.session_state.logged_in = True
-                                st.session_state.user_email = "admin"
-                                st.session_state.role = 'admin'
-                                st.session_state.set_cookie_now = True
-                                st.rerun()
+                            # if username == "admin@mail.com" and password == "admin1":
+                            #     st.session_state.logged_in = True
+                            #     st.session_state.user_email = "admin"
+                            #     st.session_state.role = 'admin'
+                            #     st.session_state.set_cookie_now = True
+                            #     st.rerun()
 
                             # 2. Check Database
                             with SessionLocal() as db_session:
                                 api_res = loginUser(username, password, db_session)
-
+                            print(f'from login page to find role of login user: {api_res.get("role")}')
                             # 3. Handle Result safely
                             if api_res and api_res.get("status"):
                                 st.session_state.logged_in = True
                                 st.session_state.user_email = username
                                 st.session_state.id = api_res["user_id"]
-                                st.session_state.role = 'user'
+                                st.session_state.role = api_res.get("role", "user")
                                 st.session_state.set_cookie_now = True
                                 st.rerun()
                             else:
