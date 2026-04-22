@@ -50,7 +50,6 @@ class UserLogActivity(Base):
     log_out_time = Column(DateTime,default=datetime.now)
     is_logged_in = Column(Boolean,default=False,index=True)
     session_id = Column(String(255),index=True)
-    auth_token = Column(String(255),index=True)
     type = Column(String(255),index=True)
 
     def to_dict(self):

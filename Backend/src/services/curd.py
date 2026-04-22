@@ -97,14 +97,14 @@ def change_password(db:Session, user_email:str, new_password:str):
 
 #----------------------------------------------------------------------------------------------------------------------
 # Fetch from DB
-def retrieve_drop_down_menu(db ):
-    try:
-        record = db.query(model.PriorityDetailList).filter(model.PriorityDetailList.id == 1).first()
-        print(f'type of result is {type(record)} result of get drop down {record} ')
-        return record.options
-    except Exception as e:
-        print(f'Error at {retrieve_drop_down_menu.__name__} : {e}')
-        raise
+# def retrieve_drop_down_menu(db ):
+#     try:
+#         record = db.query(model.PriorityDetailList).filter(model.PriorityDetailList.id == 1).first()
+#         print(f'type of result is {type(record)} result of get drop down {record} ')
+#         return record.options
+#     except Exception as e:
+#         print(f'Error at {retrieve_drop_down_menu.__name__} : {e}')
+#         raise
 
 def retrieve_drop_down_menu_for_user(db):
     try:
@@ -112,6 +112,17 @@ def retrieve_drop_down_menu_for_user(db):
         result = tuple_of_list_to_list(record)
         return result
     except Exception as e:
+        raise
+
+def retrieve_drop_down_menu_for_specific_user(db, user_name):
+    try:
+        reterived_priority = db.query(model.User.priority1, model.User.priority2, model.User.priority3 ).filter(model.User.name == user_name).first()
+        if reterived_priority and all(val and val.strip() for val in reterived_priority):
+            return reterived_priority
+
+        return None
+    except Exception as e:
+        print(f'Error at retrieve_drop_down_menu_for_specific_user :{e}')
         raise
 
 # @st.cache_data

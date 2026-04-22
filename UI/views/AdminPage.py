@@ -3,8 +3,9 @@ from UI.views.manage_priority import manage_page_logic
 from UI.views.view_detailed_stats import view_detailed_stats_logic
 from UI.views.view_stats import view_stats_logic
 from UI.views.view_user_activity import view_user_activity_logic
-from Backend.src.services.curd import retrieve_drop_down_menu, retrieve_drop_down_of_users, retrieve_drop_down_menu_for_user, \
-    add_priority_data_to_user
+# from UI.views.user_act_test import view_user_activity_logic
+# from Backend.src.services.curd import retrieve_drop_down_menu, retrieve_drop_down_of_users, retrieve_drop_down_menu_for_user, \
+#     add_priority_data_to_user
 from Backend.src.services.database import SessionLocal
 from Backend.src.services.utils import on_user_change, mark_change, validate_priorities, show_unsaved_changes_modal, \
     reset_priorities
@@ -23,6 +24,7 @@ def admin_page_logic():
             manage_page_logic()
 
         elif st.session_state.admin_tab == "activity":
+            # view_user_activity_logic()
             view_user_activity_logic()
             # st.write('view_user_activity_logic called')
 

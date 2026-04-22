@@ -5,7 +5,7 @@ import streamlit as st
 import re
 import inspect
 from bs4 import BeautifulSoup
-from .curd import change_password, add_priority_data_to_user
+from .curd import change_password, add_priority_data_to_user, retrieve_drop_down_menu_for_specific_user
 from .database import SessionLocal
 
 func_name = inspect.currentframe().f_code.co_name
@@ -205,10 +205,28 @@ def validate_priorities():
     return True
 
 
-def reset_priorities():
-    st.session_state.priority1 = "-"
-    st.session_state.priority2 = "-"
-    st.session_state.priority3 = "-"
+def reset_priorities(to_fetch:bool=False):
+    try:
+
+        new_user = st.session_state.get("user_temp")
+        if to_fetch:
+            print('inside if part of reset_priorities')
+            with SessionLocal() as db_session:
+                res = retrieve_drop_down_menu_for_specific_user(db_session, new_user)
+
+                p1, p2, p3 = res if res else ("-", "-", "-")
+                st.session_state.priority1 = p1
+                st.session_state.priority2 = p2
+                st.session_state.priority3 = p3
+
+                st.session_state.selected_user = new_user
+        else:
+            st.session_state.priority1 = "-"
+            st.session_state.priority2 = "-"
+            st.session_state.priority3 = "-"
+    except Exception as e :
+        print(f'error at reset_priorities {e}')
+        raise
 
 
 
@@ -262,3 +280,6 @@ def show_unsaved_changes_modal(db,user_drop_down_dict):
 
 def manage_priority_button():
     return None
+
+def get_index(user_priority_drop_down_list, val):
+    return user_priority_drop_down_list.index(val)
