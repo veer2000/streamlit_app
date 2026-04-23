@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from sqlalchemy.orm import Session
 import streamlit as st
 
@@ -142,6 +144,7 @@ def add_priority_data_to_user(db,selected_id, user, priority1, priority2, priori
             user_to_update.priority1 = priority1
             user_to_update.priority2 = priority2
             user_to_update.priority3 = priority3
+            user_to_update.createdate = datetime.now()
         db.commit()
         print(f"Successfully updated priorities for User ID: {selected_id}")
         return True
@@ -149,10 +152,10 @@ def add_priority_data_to_user(db,selected_id, user, priority1, priority2, priori
         print(f'Error in {add_priority_data_to_user.__name__} : {e}')
         raise
 
-def summary_of_complete_email_table_data(db):
-        data = db.query(EmailStatusDetail).all()
-        # Convert list of objects to DataFrame
-        df = pd.DataFrame([u.__dict__ for u in data])
-        if not df.empty:
-            df.drop(columns=['_sa_instance_state'], inplace=True)
-        return df
+# def summary_of_complete_email_table_data(db):
+#         data = db.query(EmailStatusDetail).all()
+#         # Convert list of objects to DataFrame
+#         df = pd.DataFrame([u.__dict__ for u in data])
+#         if not df.empty:
+#             df.drop(columns=['_sa_instance_state'], inplace=True)
+#         return df
