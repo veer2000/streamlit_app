@@ -19,7 +19,6 @@ if "user" not in st.session_state and user_drop_down_dict:
 
 
 def manage_page_logic():
-
     # ================= INIT =================
     keys_to_init = {
         "user": None,
@@ -30,7 +29,7 @@ def manage_page_logic():
         "pending_user": None,
         "show_success_msg": False   #ADDED
     }
-
+    # print(f'selected user is {st.session_state.selected_user}')
     for key, value in keys_to_init.items():
         if key not in st.session_state:
             st.session_state[key] = value
@@ -42,7 +41,7 @@ def manage_page_logic():
 
     # ================= RESET AFTER SUBMIT =================
     if st.session_state.submit_status:
-        reset_priorities()
+        reset_priorities(True)
         st.session_state.submit_status = False
 
     with st.container():
@@ -219,12 +218,13 @@ def manage_page_logic():
                         ):
                             st.session_state.submit_status = True
                             st.session_state.show_success_msg = True   # ADDED
-
+                            print(f'lets see if after save data is presnt in db {user_priority_drop_down_list}')
                             user_list = list(user_drop_down_dict.keys())
                             current_index = user_list.index(selected_name)
 
                             if current_index < len(user_list) - 1:
                                 st.session_state.selected_user = user_list[current_index + 1]
+                                print(f' inside current index part {st.session_state.selected_user}')
                                 st.session_state.form_change = False
                                 st.rerun()
                             else:
