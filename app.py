@@ -8,7 +8,6 @@ from Backend.src.services.database import SessionLocal
 from UI.utils.login_page import login_page_logic
 from UI.views.AdminPage import admin_page_logic
 from UI.views.HomePage import homepage
-import uuid
 
 st.set_page_config(layout="wide")
 def get_cookie_manager():
