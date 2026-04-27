@@ -20,5 +20,5 @@ def retrieve_drop_down_for_users(db:Session=Depends(get_db)):
     try:
         return retrieve_drop_down_of_users(db)
     except Exception as e:
-        print(f'Error at {retrieve_drop_down_for_users.__name__} : {e}')
+        # print(f'Error at {retrieve_drop_down_for_users.__name__} : {e}')
         raise

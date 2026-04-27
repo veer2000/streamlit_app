@@ -158,8 +158,8 @@ def change_password_dialog():
 
 def validate_password(password : bytes, hashed_password : bytes):
     try:
-        print(f'Db Password : {password}')
-        print(f'Entered and coinverted  Password : {hashed_password}')
+        #print(f'Db Password : {password}')
+        #print(f'Entered and coinverted  Password : {hashed_password}')
         # NOTE: for now lets convert passowrd to bytes to match
         if bcrypt.checkpw(password, hashed_password):
             print("Password match!")
@@ -210,7 +210,7 @@ def reset_priorities(to_fetch:bool=False):
 
         new_user = st.session_state.get("user_temp")
         if to_fetch:
-            print('inside if part of reset_priorities')
+            #print('inside if part of reset_priorities')
             with SessionLocal() as db_session:
                 res = retrieve_drop_down_menu_for_specific_user(db_session, new_user)
 

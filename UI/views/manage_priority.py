@@ -12,7 +12,7 @@ with SessionLocal() as db_session:
     user_priority_drop_down_list = retrieve_drop_down_menu_for_user(db)
     user_drop_down_dict = retrieve_drop_down_of_users(db)
 
-print(f'testing result of user_priority_drop_down_list: {user_priority_drop_down_list}')
+#print(f'testing result of user_priority_drop_down_list: {user_priority_drop_down_list}')
 
 if "user" not in st.session_state and user_drop_down_dict:
     st.session_state.user = list(user_drop_down_dict.keys())[0]
@@ -92,12 +92,12 @@ def manage_page_logic():
             # ================= PRIORITIES =================
             with st.container(border=True, height=280, width=900):
                 if_priority_exists = retrieve_drop_down_menu_for_specific_user(db, selected_user)
-                print(f' find out what if_priority_exists returns {if_priority_exists} ')
+                # print(f' find out what if_priority_exists returns {if_priority_exists} ')
                 if if_priority_exists:
                     # print(f'if Priority exists we are printing them : {if_priority_exists}')
                     p1, p2, p3 = if_priority_exists
-                    print(f'p1 : {p1}, p2 : {p2}, p3 : {p3} ')
-                    print(f'selected user is from manage priority {st.session_state.selected_user}')
+                    # print(f'p1 : {p1}, p2 : {p2}, p3 : {p3} ')
+                    # print(f'selected user is from manage priority {st.session_state.selected_user}')
                     with st.container(border=True, height=70, width=900):
                         c1, c2, _ = st.columns([0.5, 0.5, 0.1])
                         with c1:
@@ -218,13 +218,13 @@ def manage_page_logic():
                         ):
                             st.session_state.submit_status = True
                             st.session_state.show_success_msg = True   # ADDED
-                            print(f'lets see if after save data is presnt in db {user_priority_drop_down_list}')
+                            #print(f'lets see if after save data is presnt in db {user_priority_drop_down_list}')
                             user_list = list(user_drop_down_dict.keys())
                             current_index = user_list.index(selected_name)
 
                             if current_index < len(user_list) - 1:
                                 st.session_state.selected_user = user_list[current_index + 1]
-                                print(f' inside current index part {st.session_state.selected_user}')
+                                #print(f' inside current index part {st.session_state.selected_user}')
                                 st.session_state.form_change = False
                                 st.rerun()
                             else:
@@ -232,7 +232,7 @@ def manage_page_logic():
 
     # ================= WARNING MODAL =================
     if st.session_state.show_warning:
-        print(f'Selected user is {st.session_state.selected_user}')
+        #print(f'Selected user is {st.session_state.selected_user}')
         show_unsaved_changes_modal(db, user_drop_down_dict)
 
     return None

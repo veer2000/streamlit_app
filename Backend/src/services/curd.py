@@ -30,7 +30,7 @@ def get_allocated_email_original(db, user_email, user_password):
         user_identity =  db.query(model.User).filter(model.User.email == user_email).first()
         return user_identity
     except Exception as e:
-        print(f'Error in {func_name} . {get_allocated_email_original.__name__} : {e}')
+        #print(f'Error in {func_name} . {get_allocated_email_original.__name__} : {e}')
         raise
 
 def get_allocated_email(db : Session, email : str, password):
@@ -47,7 +47,7 @@ The special investigation team probing the case has recovered a revolver, 21 car
 SIT officer, deputy Superintendent of Police Kirankumar Suryavanshi, also gave information about the probe to the court.
         """
     except Exception as e:
-        print(f'Error in {func_name} . {get_allocated_email.__name__} : {e}')
+        #print(f'Error in {func_name} . {get_allocated_email.__name__} : {e}')
         raise
 
 
@@ -56,26 +56,27 @@ def get_draft_response(emailContent):
         return emailContent
         # return " This is a sample draft response. Please review, edit ad needed and submit"
     except Exception as e:
-        print(f'Error in {func_name} . {get_draft_response.__name__} : {e}')
+        #print(f'Error in {func_name} . {get_draft_response.__name__} : {e}')
         raise
 
 def get_user_hash_password(db:Session, email:str):
     try:
         # print(f'Email: {email}')
-        print(f'Function is {get_user_hash_password.__name__}')
+        #print(f'Function is {get_user_hash_password.__name__}')
         user_password = db.query(model.User).filter(model.User.email == email).first()
         if not user_password:
             print(f'User with email {email} does not exist')
-        print(f'User_password : {user_password.password}') # NOTE: remove this print after testing
+        #print(f'User_password : {user_password.password}') # NOTE: remove this print after testing
         return user_password.password
     except Exception as e:
-        print(f'Error at {func_name} . {get_user_hash_password.__name__} : {e}')
+        #print(f'Error at {func_name} . {get_user_hash_password.__name__} : {e}')
+        raise
 
 def submit_response(response):
     try:
         return response
     except Exception as e:
-        print(f'Error in {func_name} . {submit_response.__name__} : {e}')
+        #print(f'Error in {func_name} . {submit_response.__name__} : {e}')
         raise
 
 @hash_arg("new_password")
@@ -92,7 +93,7 @@ def change_password(db:Session, user_email:str, new_password:str):
         db.refresh(update_user_password)
         return {"status": True, "message": "Password changed successfully"}
     except Exception as e:
-        print(f'Error in {func_name} . {change_password.__name__} : {e}')
+        #print(f'Error in {func_name} . {change_password.__name__} : {e}')
         db.rollback()
         raise
 
@@ -124,7 +125,7 @@ def retrieve_drop_down_menu_for_specific_user(db, user_name):
 
         return None
     except Exception as e:
-        print(f'Error at retrieve_drop_down_menu_for_specific_user :{e}')
+        #print(f'Error at retrieve_drop_down_menu_for_specific_user :{e}')
         raise
 
 # @st.cache_data
@@ -134,7 +135,7 @@ def retrieve_drop_down_of_users(_db):
         user_records = _db.query(User.id, User.name).filter(User.role != "admin").all()
         return {user.name: user.id for user in user_records}
     except Exception as e:
-        print(f'Error in {retrieve_drop_down_of_users.__name__} : {e}')
+        #print(f'Error in {retrieve_drop_down_of_users.__name__} : {e}')
         raise
 
 def add_priority_data_to_user(db,selected_id, user, priority1, priority2, priority3):
@@ -146,10 +147,10 @@ def add_priority_data_to_user(db,selected_id, user, priority1, priority2, priori
             user_to_update.priority3 = priority3
             user_to_update.createdate = datetime.now()
         db.commit()
-        print(f"Successfully updated priorities for User ID: {selected_id}")
+        #print(f"Successfully updated priorities for User ID: {selected_id}")
         return True
     except Exception as e:
-        print(f'Error in {add_priority_data_to_user.__name__} : {e}')
+        #print(f'Error in {add_priority_data_to_user.__name__} : {e}')
         raise
 
 # def summary_of_complete_email_table_data(db):

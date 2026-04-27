@@ -75,7 +75,7 @@ def clean_html_for_quill(raw_html):
 
         return content.strip()
     except Exception as e:
-        print(f' Error at {func_name} method :{clean_html_for_quill.__name__} error : {e}')
+        #print(f' Error at {func_name} method :{clean_html_for_quill.__name__} error : {e}')
         raise
 
 
@@ -114,17 +114,17 @@ def change_password_dialog():
 
 def validate_password(password: bytes, hashed_password: bytes):
     try:
-        print(f'Db Password : {password}')
-        print(f'Entered and coinverted  Password : {hashed_password}')
+        #print(f'Db Password : {password}')
+        #print(f'Entered and coinverted  Password : {hashed_password}')
         # NOTE: for now lets convert passowrd to bytes to match
         if bcrypt.checkpw(password, hashed_password):
-            print("Password match!")
+            #print("Password match!")
             return True
         else:
-            print("Incorrect password.")
+            #print("Incorrect password.")
             return False
     except Exception as e:
-        print(f"Error at {validate_password.__name__} error: {str(e)}")
+        #print(f"Error at {validate_password.__name__} error: {str(e)}")
         raise
 
 
@@ -133,7 +133,7 @@ def validate_password(password: bytes, hashed_password: bytes):
 # In utils.py
 def view_email(email):
     random_is = random.random()
-    print(f' from new file of view_email {random_is}')
+    #print(f' from new file of view_email {random_is}')
     try:
         # REMOVE the get_allocated_email() call from here
         # email = get_allocated_email() <-- Delete this

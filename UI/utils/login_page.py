@@ -12,51 +12,39 @@ def login_page_logic():
         left_co, cent_co, last_co = st.columns(spec=[2.9, 3.9, 0.6], vertical_alignment="center")
 
         with cent_co:
-            with st.container():
-                st.title("Login to System")
-                username = st.text_input("Username", placeholder="Enter your username", label_visibility="collapsed", width=300)
-                password = st.text_input("Password", type="password", placeholder="Enter your password",
-                                         label_visibility="collapsed", width=300)
+            with st.container(width= 300):
+                st.title("Login Page")
+                username = st.text_input("Username", placeholder="user@mail.com", label_visibility="collapsed")
 
-                # Create the button columns
-                cent_co_left, cent_co_mid, cent_co_right = st.columns([1, 2, 2], gap="xxsmall")
+                password = st.text_input("Password", type="password", placeholder="******",
+                                         label_visibility="collapsed")
 
-                with cent_co_left:
-                    # Logic inside the button
-                    print(f'At login logic ')
-                    if st.button("Login", icon_position="right", width=100):
-                        if not username or not password:
-                            st.warning("Please enter both fields.")
-                        else:
-                            # 1. Check Admin
-                            # if username == "admin@mail.com" and password == "admin1":
-                            #     st.session_state.logged_in = True
-                            #     st.session_state.user_email = "admin"
-                            #     st.session_state.role = 'admin'
-                            #     st.session_state.set_cookie_now = True
-                            #     st.rerun()
+                col1, _, col2  = st.columns([1.3,0.1,1.8])
 
-                            # 2. Check Database
-                            with SessionLocal() as db_session:
-                                api_res = loginUser(username, password, db_session)
-                            print(f'from login page to find role of login user: {api_res.get("role")}')
-                            # 3. Handle Result safely
-                            if api_res and api_res.get("status"):
-                                st.session_state.logged_in = True
-                                st.session_state.user_email = username
-                                st.session_state.id = api_res["user_id"]
-                                st.session_state.role = api_res.get("role", "user")
-                                st.session_state.set_cookie_now = True
-                                st.rerun()
-                            else:
-                                st.error("Invalid credentials")
+                login_clicked = col1.button("Login", use_container_width=True)
+                change_pw_clicked = col2.button("Change Password", type="secondary", use_container_width=True)
 
-                with cent_co_mid:
-                    # This is now OUTSIDE the login button logic,
-                    # so it will always stay visible!
-                    if st.button("Change Password", icon_position="left", width="content"):
-                        change_password_dialog()
+            if login_clicked:
+                if not username or not password:
+                    st.warning("Please enter both fields.")
+                else:
+                    with SessionLocal() as db_session:
+                        api_res = loginUser(username, password, db_session)
 
+                    if api_res.get("role") != 'admin':
+                        st.warning('Login through Admin Credential', width=300)
+                    elif api_res.get("status"):
+                        st.session_state.logged_in = True
+                        st.session_state.user_email = username
+                        st.session_state.id = api_res["user_id"]
+                        st.session_state.role = api_res.get("role")
+                        st.session_state.set_cookie_now = True
+                        st.rerun()
+                    else:
+                        st.error("Invalid credentials")
+
+            if change_pw_clicked:
+                change_password_dialog()
     except Exception as e:
         # Use st.error so you see the error on the webpage while debugging
         st.error(f"Error at function {login_page_logic.__name__} : {e}")
