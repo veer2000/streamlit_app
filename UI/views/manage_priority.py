@@ -12,8 +12,6 @@ with SessionLocal() as db_session:
     user_priority_drop_down_list = retrieve_drop_down_menu_for_user(db)
     user_drop_down_dict = retrieve_drop_down_of_users(db)
 
-#print(f'testing result of user_priority_drop_down_list: {user_priority_drop_down_list}')
-
 if "user" not in st.session_state and user_drop_down_dict:
     st.session_state.user = list(user_drop_down_dict.keys())[0]
 
@@ -29,7 +27,6 @@ def manage_page_logic():
         "pending_user": None,
         "show_success_msg": False   #ADDED
     }
-    # print(f'selected user is {st.session_state.selected_user}')
     for key, value in keys_to_init.items():
         if key not in st.session_state:
             st.session_state[key] = value
@@ -92,12 +89,12 @@ def manage_page_logic():
             # ================= PRIORITIES =================
             with st.container(border=True, height=280, width=900):
                 if_priority_exists = retrieve_drop_down_menu_for_specific_user(db, selected_user)
-                # print(f' find out what if_priority_exists returns {if_priority_exists} ')
+                (f' find out what if_priority_exists returns {if_priority_exists} ')
                 if if_priority_exists:
-                    # print(f'if Priority exists we are printing them : {if_priority_exists}')
+                    (f'if Priority exists we are printing them : {if_priority_exists}')
                     p1, p2, p3 = if_priority_exists
-                    # print(f'p1 : {p1}, p2 : {p2}, p3 : {p3} ')
-                    # print(f'selected user is from manage priority {st.session_state.selected_user}')
+                    (f'p1 : {p1}, p2 : {p2}, p3 : {p3} ')
+                    (f'selected user is from manage priority {st.session_state.selected_user}')
                     with st.container(border=True, height=70, width=900):
                         c1, c2, _ = st.columns([0.5, 0.5, 0.1])
                         with c1:

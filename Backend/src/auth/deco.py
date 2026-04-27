@@ -56,7 +56,6 @@ def hash_arg(arg_name):
                 hashed = bcrypt.hashpw(raw_password.encode('utf-8'), salt)
 
                 bound_args.arguments[arg_name] = hashed.decode('utf-8')
-                # print(f"DEBUG: Successfully hashed '{arg_name}' for {fun.__name__}")
 
             return fun(*bound_args.args, **bound_args.kwargs)
 

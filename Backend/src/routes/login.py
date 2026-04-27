@@ -51,6 +51,7 @@ async def getaallusers(db:Session=Depends(get_db)):
     except Exception as e:
         #print(f'Error at {getaallusers.__name__} error: {e}')
         raise
+
 @login_router.post("/adduser")
 @hash_arg("password")
 async def addUser(name: str, email: str, password: str, role :str ,db: Annotated[Session, Depends(get_db)],  password_original: Optional[str] = None,):
